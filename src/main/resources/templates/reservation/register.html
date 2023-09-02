@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout1}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+    </style>
+</th:block>
+
+<!-- 사용자 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+    <script th:inline="javascript">
+        $(document).ready(function () {
+            var errorMessage = [[${errorMessage}]];
+            if (errorMessage != null) {
+                alert(errorMessage);
+            }
+        });
+    </script>
+
+</th:block>
+
+<div layout:fragment="content">
+
+    <div class="container">
+        <div class="login-wrapper-flex">
+            <div class="login-wrapper-contents login-padding">
+                <form class="login-wrapper-form custom-form padding-top-20"
+                      th:action="@{/reservation/register}" id="register" method="post">
+<!--                    <p class="text-danger" th:text="${errorMessage}" th:if="${errorMessage}"></p>-->
+                    낚시 예약
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="regDate">예약날짜</label>
+                        <input type="text" name="regDate"  th:value="${param.regDate}" class="form--control" readonly>
+                    </div>
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="member">예약인원</label>
+                        <select class="form-select" aria-label="Default select example" id="member" name="member">
+                            <option th:each="i : ${#numbers.sequence(1, extras)}" th:value="${i}" th:text="${i}"></option>
+                        </select>
+                    </div>
+                    <div th:if="${memberFormDto.email}">
+                        <input type="hidden" name="email" th:value="${memberFormDto.email}">
+                    </div>
+                    <div th:unless="${memberFormDto.email}" class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="email"> 이메일 </label>
+                        <input type="text" name="email" th:value="${memberFormDto.email}" class="form--control" placeholder="이메일을 입력해주세요" required>
+                    </div>
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="regName">예약자명</label>
+                        <input type="text" name="regName" th:value="${memberFormDto.name}" class="form--control" placeholder="예약자명을 입력해주세요" required>
+                    </div>
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="name">입금자명</label>
+                        <input type="text" name="depositName" class="form--control" placeholder="입금자명을 입력해주세요" required>
+                    </div>
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="tel">전화번호</label>
+                        <div style="display: flex;">
+                            <input type="number" id="tel1" th:value="${memberFormDto.tel1}" name="tel1" class="form--control" maxlength="3" required style="flex: 1;">&nbsp;&nbsp;
+                            <input type="number" id="tel2" th:value="${memberFormDto.tel2}" name="tel2" class="form--control" maxlength="4" required style="flex: 1;">&nbsp;&nbsp;
+                            <input type="number" id="tel3" th:value="${memberFormDto.tel3}" name="tel3" class="form--control" maxlength="4" required style="flex: 1;">
+                        </div>
+                        <script>
+                            function enforceMaxLength(element, maxLength) {
+                                element.oninput = function () {
+                                    if (this.value.length > maxLength) {
+                                        this.value = this.value.slice(0,maxLength);
+                                    }
+                                }
+                            }
+
+                            enforceMaxLength(document.getElementById('tel1'), 3);
+                            enforceMaxLength(document.getElementById('tel2'), 4);
+                            enforceMaxLength(document.getElementById('tel3'), 4);
+                        </script>
+                    </div>
+                    <button class="submit-btn w-100 mt-4" type="submit">예약하기</button>
+                    <button class="btn-outline-primary w-100 mt-4" type="button"
+                            onclick="window.location.href='/reservation/list'">돌아가기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+</html>
