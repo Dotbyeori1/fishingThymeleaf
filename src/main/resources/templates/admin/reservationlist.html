@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<div layout:fragment="content">
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <div class="container" style="margin: 50px auto;">
+        <h1>예약현황(날짜별)</h1>
+        <p>예약번호를 누르시면 해당번호의 예약정보 확인·수정·삭제가 가능합니다.</p>
+        <p>날짜별로 조회가 가능합니다.</p>
+        <div>
+            <form id="form1" th:action="@{/admin/reservationlist}" method="get" style="margin-top: 25px;">
+                <div class="form-group row">
+                    <span class="col-8 col-sm-9 col-md-5 col-lg-3">
+                        <input type="date" class="form-control" id="regDate" name="regDate"
+                               th:value="${param.regDate} != null? ${param.regDate}:${reservationDTO.regDate}">
+                    </span>
+                    <span class="col-4 col-sm-3 col-md-3 col-lg-2">
+                        <button th:if="${available == false || extras <= 0 }" type="button" class="btn btn-danger">
+                            예약불가
+                        </button>
+                        <button th:if="${available == true && extras > 0}" type="button" class="btn btn-outline-primary" data-toggle="modal"
+                                data-target="#myModal">
+                            예약등록
+                        </button>
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        <table class="table" style="margin-top: 25px;">
+            <thead>
+            <tr>
+                <th>예약번호</th>
+                <th>예약자명</th>
+                <th>입금자명</th>
+                <th>전화번호</th>
+                <th>인원</th>
+                <th>입금금액</th>
+                <th>확정결정</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="reservation : ${reservationDTOS}">
+                <td><a th:href="@{/admin/reservationInfo(rvno=${reservation.rvno}, search=false)}">[[${reservation.rvno}]]</a></td>
+                <td th:text="${reservation.regName}"></td>
+                <td th:text="${reservation.depositName}"></td>
+                <td><a th:href="'tel:'+${reservation.tel}" >[[${reservation.tel}]]</a></td>
+                <td>[[${reservation.member}]]</td>
+                <td>[[${reservation.formatMoney}]]</td>
+                <td>
+                    <p th:if="${reservation.state}">
+                        확정완료
+                    </p>
+                    <button th:unless="${reservation.state}"
+                            class="btn btn-primary"
+                            th:onclick="'confirmStateChange(true,' + ${reservation.rvno} + ');'">
+                        확정하기
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div style="text-align: right;">
+            <p>남은 인원 : [[${extras}]]명 </p>
+            <p>확정된 인원 : [[${confirmMember}]]명 </p>
+        </div>
+
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">예약등록</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <form class="login-wrapper-form custom-form padding-top-20"
+                          th:action="@{/admin/register}" id="register" method="post">
+                        <div class="modal-body">
+                            <!--                    <p class="text-danger" th:text="${errorMessage}" th:if="${errorMessage}"></p>-->
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">예약날짜</label>
+                                <input type="text" name="regDate"
+                                       th:value="${param.regDate} != null? ${param.regDate}:${reservationDTO.regDate}"
+                                       class="form-control"
+                                       readonly>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">예약인원</label>
+                                <select class="form-select" aria-label="Default select example" id="member"
+                                        name="member">
+                                    <option th:each="i : ${#numbers.sequence(1, extras)}" th:value="${i}"
+                                            th:text="${i}+'명'"></option>
+                                </select>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">입금필요금액</label>
+                                <input type="text" id="money" class="form-control" readonly>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">예약자명</label>
+                                <input type="text" name="regName" class="form-control" placeholder="예약자명을 입력해주세요"
+                                       required>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">입금자명</label>
+                                <input type="text" name="depositName" class="form-control" placeholder="입금자명을 입력해주세요"
+                                       required>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">지역</label>
+                                <input type="text" name="region" class="form-control" placeholder="예시) 거제, 부산, 창원, 대전"
+                                       required>
+                            </div>
+                            <div class="single-input mt-4">
+                                <label class="label-title mb-3">전화번호</label>
+                                <div style="display: flex;">
+                                    <input type="number" id="tel1" name="tel1" class="form-control" maxlength="3"
+                                           required style="flex: 1;">-
+                                    <input type="number" id="tel2" name="tel2" class="form-control" maxlength="4"
+                                           required style="flex: 1;">-
+                                    <input type="number" id="tel3" name="tel3" class="form-control" maxlength="4"
+                                           required style="flex: 1;">
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="margin-top: 50px;">
+                                <button type="submit" class="btn btn-primary">전송</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            $(document).ready(function () {
+                $("#register").on("submit", function (event) {
+                    event.preventDefault();
+
+                    $.ajax({
+                        type: "POST",
+                        url: $(this).attr('action'),
+                        data: $(this).serialize(), // 폼 데이터를 직렬화하여 전송합니다.
+                        success: function (response) {
+                            alert(response.message);
+                            $("#myModal").hide();
+                            location.reload();
+                        },
+                        error: function (error) {
+                            alert('오류가 발생했습니다.');
+                        }
+                    });
+                });
+            });
+
+
+            window.addEventListener('DOMContentLoaded', function () {
+                let dateInputForm1 = document.querySelector('#form1 #regDate');
+                dateInputForm1.addEventListener('change', function () {
+                    let form = dateInputForm1.closest('form');
+                    form.submit();
+                });
+            });
+
+            function confirmStateChange(isConfirmed, reservationId) {
+                let result = window.confirm("예약상태 확정 및 문자를 보내시겠습니까?");
+                if (result) {
+                    // '예'를 선택했을 때의 로직
+                    // 예를 들어, AJAX 호출을 사용해 서버에 변경 요청을 보낼 수 있습니다.
+                    // AJAX 예시:
+                    $.ajax({
+                        url: '/admin/reservationstate',
+                        type: 'POST',
+                        contentType: 'application/json',  // JSON 형식 명시
+                        data: JSON.stringify({  // JavaScript 객체를 JSON 문자열로 변환
+                            state: isConfirmed,
+                            rvno: reservationId
+                        }),
+                        success: function (response) {
+                            alert(response.success);
+                            location.reload(); // 페이지 새로고침
+                        },
+                        error: function (jqXHR) {
+                            let responseDTO = JSON.parse(jqXHR.responseText);
+                            alert(responseDTO.error);
+                        }
+                    });
+                }
+            }
+
+            function enforceMaxLength(element, maxLength) {
+                element.oninput = function () {
+                    if (this.value.length > maxLength) {
+                        this.value = this.value.slice(0, maxLength);
+                    }
+                }
+            }
+
+            enforceMaxLength(document.getElementById('tel1'), 3);
+            enforceMaxLength(document.getElementById('tel2'), 4);
+            enforceMaxLength(document.getElementById('tel3'), 4);
+
+            // 총 비용 계산 함수
+            function calculateCost() {
+                const member = document.getElementById('member').value;
+                const money = document.getElementById('money');
+                const fishingMoney = /*[[${fishingMoney}]]*/ [] || 0;
+
+                let totalCost = member * fishingMoney;
+
+                // 숫자를 콤마로 구분된 형식의 문자열로 변환
+                const formattedTotalCost = totalCost.toLocaleString('en-US');
+
+                money.value = formattedTotalCost + '원';
+            }
+
+            // "member" select 태그에 이벤트 리스너 추가
+            document.getElementById('member').addEventListener('change', calculateCost);
+
+            // 페이지 로드 시 총 비용 초기 계산
+            window.addEventListener('load', function () {
+                calculateCost();
+            });
+        </script>
+
+    </div>
+</div>
+
+</html>

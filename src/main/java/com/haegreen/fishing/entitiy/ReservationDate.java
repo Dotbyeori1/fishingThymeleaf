@@ -23,10 +23,21 @@ public class ReservationDate {
     @Column(unique = true, name = "regDate")
     private LocalDate regDate;
 
+    @Builder.Default
+    private int extrasMembers = 16; // 여유인원
+
+    @Builder.Default
+    private String fishingSort = "갈치"; // 어업 종류
+
+    private int fishingMoney; // 금액
+
     // 예약 가능 여부. true면 예약 가능, false면 판매 취소(예약 불가).
     @Builder.Default
     private boolean available = true;
 
+    private String message;
+
+    @Builder.Default
     @OneToMany(mappedBy = "reservationDate")
     private List<Reservation> reservations = new ArrayList<>();
 }

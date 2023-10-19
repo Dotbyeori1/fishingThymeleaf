@@ -4,9 +4,260 @@
       layout:decorate="~{fragments/layout1}">
 
 <div layout:fragment="content">
+    <style>
+          .image-container img {
+            object-fit: cover;
+            width: 100%;
+            max-height: 400px;
+        }
 
-    <div class="container" style="margin: 30px auto">
-        test
+        .weeklyReservation {
+            position: relative;
+            max-width: 950px;
+            margin: 0px auto;
+        }
+
+        .dates {
+            display: flex;
+            flex-flow: row wrap;
+            border-top: 2px solid #333333;
+            border-bottom: 1px solid #333333;
+        }
+
+        .date {
+            width: calc(100% / 4);
+            height: 175px;
+            margin : 25px auto 25px auto;
+            align-content: center;
+            text-align: center;
+        }
+
+    </style>
+    <!-- clipboard -->
+    <script th:src="@{/clipboard.min.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const reservations = /*[[${reservationDTOS}]]*/ [];
+        const reservationDates = /*[[${reservationDateDTOS}]]*/ [];
+        /*]]>*/
+    </script>
+    <div class="image-container">
+        <img th:src="@{/assets/img/28d2cb4be026526627ec53c493d9877f.jpg}" alt="img">
     </div>
+
+    <section class="about-area pat-75 pab-75">
+        <div class="container">
+            <div class="weeklyReservation">
+                <div style="width: 325px; height: 50px; margin: 0 auto;"><h3 style="text-align: center;">이번주 예약 및
+                    예약현황</h3></div>
+                <div class="main">
+                    <div class="dates"></div>
+                </div>
+                <div style="text-align: center; margin-top: 50px;">
+                    <button class="btn btn-info" style="font-size: 18px; width: 200px; height: 50px;" onclick="window.location.href='/reservation/list'"><i class="las la-calendar"></i>예약현황보기</button>
+                </div>
+            </div>
+            <div style="max-width: 950px; margin: 75px auto;">
+                <h3 style="text-align: center;">입금 계좌 안내</h3>
+                <table class="table table-bordered" style="margin-top: 20px;">
+                    <thead>
+                    <tr class="table-dark">
+                        <th style="width: 27%">입금은행</th>
+                        <th style="width: 46%">계좌번호</th>
+                        <th style="width: 27%">예금주명</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>농협</td>
+                        <td>356-0402-7662-83&nbsp;<button class="btn btn-dark" id="copyButton">복사하기</button><span id="copyStatus"></span>
+                        <td>김동수</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="contact-map">
+                <div class="mt-2" style="width: 300px; margin: 0 auto">
+                    <h3 style="text-align: center;">오시는길</h3>
+                </div>
+                <div class="hotel-view-contents-location mt-2" style="width: 300px; margin: 0 auto;">
+                    <span class="hotel-view-contents-location-para" style="text-align: center;">
+                                        <span class="hotel-view-contents-location-icon"> <i
+                                                class="las la-map-marker-alt"></i></span>
+                       <a href="https://naver.me/xAtwY12g" target="_blank">전라남도 여수시 신월동 120-46</a>
+                        <div style="text-align:center; margin-top: 10px;">
+                        <button class="btn btn-info" type="button" style="font-size: 18px; width: 200px; height: 50px;"
+                                onclick='window.open("https://naver.me/xAtwY12g", "_blank")'><i class="lar la-map"></i>네이버지도</button>
+                        </div>
+                    </span>
+                </div>
+                <div id="map" style="max-width:950px; min-height: 350px; margin: 20px auto 20px auto;"></div>
+
+                <!-- Naver 지도 스크립트 로드 -->
+                <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=vn3ftqrnmy"></script>
+
+                <script th:inline="javascript">
+                    let mapOptions = {
+                        center: new naver.maps.LatLng(33.450701, 126.570667),
+                        level: 3, // 확대 레벨을 3으로 설정
+                        locationButtonEnabled:true,
+                        zoomControl: true, // 확대/축소 슬라이더 UI를 표시
+                        zoomControlOptions: {
+                            style: naver.maps.ZoomControlStyle.SMALL, // SMALL 스타일로 설정
+                            position: naver.maps.Position.RIGHT_CENTER // 위치를 오른쪽 중앙으로 설정
+                        }
+                    };
+
+                    let map = new naver.maps.Map('map', mapOptions);
+
+                    let address = "전라남도 여수시 신월동 120-46";
+                    let name = "해그린피싱";
+                    let coords = new naver.maps.LatLng(34.7224132, 127.7076481);
+
+                    let marker = new naver.maps.Marker({
+                        position: coords,
+                        map: map
+                    });
+
+                    let infowindow = new naver.maps.InfoWindow({
+                        content: '<div style="width:150px;text-align:center;padding:6px 0;">' + name + '</div>'
+                    });
+
+                    infowindow.open(map, marker);
+
+                    // 지도의 중심을 결과값으로 받은 위치로 이동시킵니다
+                    map.setCenter(coords);
+                </script>
+                <script>
+                    // Date 객체 생성
+                    let date = new Date();
+                    let dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+                    // 날짜별로 예약이 얼마나 찼는지와 state를 계산
+                    const reservationCountByDate = {};
+                    reservations.forEach(reservation => {
+                        const date = reservation.regDate;
+                        const state = reservation.state;
+                        const memberCount = reservation.member;
+                        const regName = reservation.regName;
+                        if (!reservationCountByDate[date]) {
+                            reservationCountByDate[date] = {
+                                totalMember: 0,
+                                confirmedMember: 0,
+                                regInfo: [] // regName과 memberCount를 합쳐 저장할 배열
+                            };
+                        }
+
+                        reservationCountByDate[date].totalMember += reservation.member;
+
+                        if (state) { // 확정된 경우만
+                            reservationCountByDate[date].confirmedMember += reservation.member;
+                        }
+
+                        // regName과 memberCount를 합쳐서 저장
+                        reservationCountByDate[date].regInfo.push(`${regName}님(${memberCount}명)`);
+                    });
+
+                    // regDate 별로 available 여부와 message를 저장하는 객체
+                    const availabilityByDate = {};
+                    const messageByDate = {};
+                    const fishingSortBydate = {};
+                    const extraMembersBydate = {};
+                    reservationDates.forEach(reservationDate => {
+                        const regDate = reservationDate.regDate;
+                        const available = reservationDate.available;
+                        const message = reservationDate.message;
+                        const fishingSort = reservationDate.fishingSort;
+                        const extraMembers = reservationDate.extrasMembers;
+                        availabilityByDate[regDate] = available;
+                        messageByDate[regDate] = message;
+                        fishingSortBydate[regDate] = fishingSort;
+                        extraMembersBydate[regDate] = extraMembers;
+                    });
+
+                    const renderCalendar = () => {
+                        const today = new Date();
+                        // 시간이 16시 이후인지 확인
+                        if (today.getHours() >= 16) {
+                            today.setDate(today.getDate() + 1);  // 다음 날짜로 변경
+                        }
+                        const viewDay = today.getDate();
+                        const viewYear = date.getFullYear();
+                        const viewMonth = date.getMonth();
+                        const dates = Array.from({length: 8}, (_, i) => {
+                            const newDate = new Date(viewYear, viewMonth, viewDay + i);
+                            return newDate.getDate();
+                        });
+
+                        dates.forEach((currentDate, i) => {
+                            const thisDate = new Date(viewYear, viewMonth, viewDay + i);
+                            const paddedMonth = String(thisDate.getMonth() + 1).padStart(2, '0');
+                            const paddedDate = String(thisDate.getDate()).padStart(2, '0');
+                            const fullDate = `${thisDate.getFullYear()}-${paddedMonth}-${paddedDate}`;
+                            const yearMonth = `${paddedMonth}-${paddedDate}`;
+                            const dayOfWeek = thisDate.getDay();
+                            const confirmedMemberCount = reservationCountByDate[fullDate]?.confirmedMember || 0;
+                            const isAvailable2 = availabilityByDate[fullDate] === true;  // true 일 경우에만 예약 가능
+                            const finshingSort = fishingSortBydate[fullDate] || '';
+                            let extras = extraMembersBydate[fullDate] || 0; // 예약 가능한 최대 인원
+                            const extraMembers = extras - confirmedMemberCount; // 확정된 인원을 빼서 남은 인원을 계산
+                            const isAvailable = extraMembers > 0;
+                            const btnClass = isAvailable2 ? (isAvailable ? 'btn-success' : 'btn-warning') : 'btn-danger';
+                            const btnText = isAvailable ? '예약가능' : '예약완료';
+
+                            let btnOnClick = isAvailable2 && isAvailable ? `onclick='window.location.href = "/reservation/register?mainYN=false&regDate=${fullDate}"'` : '';
+
+                            dates[i] = `
+                                 <div class="date">
+                                         <h5>${yearMonth}(${dayNames[dayOfWeek]})</h5>
+                                        <div style="text-align: center; margin-top: 5px;">
+                                             <b>종류</b><br/>
+                                             ${finshingSort}<br/>
+                                              <b>남은인원</b><br/>
+                                        ${extraMembers}명<br/>
+                                             <button class="btn ${btnClass}" ${btnOnClick}>
+                                                  ${isAvailable2? btnText:'예약불가'}
+                                             </button>
+                                        </div>
+                                 </div>
+                                 `;
+                        });
+
+                        document.querySelector('.dates').innerHTML =  dates.join('');
+
+                    }
+
+                    renderCalendar();
+
+
+                    document.getElementById('copyButton').addEventListener('click', async function() {
+                        await copyTextToClipboard('농협 356-0402-7662-83');
+                    });
+
+                    async function copyTextToClipboard(text) {
+                        try {
+                            await navigator.clipboard.writeText(text);
+
+                            const copyStatus = document.getElementById('copyStatus');
+                            copyStatus.textContent = '복사성공';
+
+                            setTimeout(() => {
+                                copyStatus.textContent = '';
+                            }, 1500);
+                        } catch (err) {
+                            const copyStatus = document.getElementById('copyStatus');
+                            copyStatus.textContent = '복사실패';
+
+                            setTimeout(() => {
+                                copyStatus.textContent = '';
+                            }, 1500);
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+    </section>
 
 </div>

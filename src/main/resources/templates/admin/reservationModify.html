@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            margin: 0 10px;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content">
+
+    <div class="container" style="max-width: 800px; margin: 50px auto 0 auto">
+        <h1>예약수정</h1>
+        <p style="margin-top: 5px;">예약 수정은 신중하게 해주세요.</p>
+
+        <form th:action="@{/admin/reservationModify}" th:method="post">
+            <input type="hidden" name="search" th:value="${param.search}"/>
+            <table class="table table-bordered">
+                <tr>
+                    <th style="width: 30%">예약번호</th>
+                    <td style="width: 70%">
+                        <input type="text" class="form-control" name="rvno" th:value="${reservationDTO.rvno}"
+                               readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <th>예약날짜</th>
+                    <td>
+                        <input type="date" class="form-control" name="regDate" th:value="${reservationDTO.regDate}">
+                    </td>
+                </tr>
+                <tr>
+                    <th>예약자명</th>
+                    <td>
+                        <input type="text" class="form-control" name="regName"
+                               th:value="${reservationDTO.regName}" placeholder="입금자명을 입력하세요">
+                    </td>
+                </tr>
+                <tr>
+                    <th>입금자명</th>
+                    <td>
+                        <input type="text" class="form-control" name="depositName"
+                               th:value="${reservationDTO.depositName}" placeholder="입금자명을 입력하세요">
+                    </td>
+                </tr>
+                <tr>
+                    <th>지역</th>
+                    <td>
+                        <input type="text" class="form-control" name="region"
+                               th:value="${reservationDTO.region}" placeholder="식별할 수 있을 정도의 지역을 입력해주세요. 예시) 무주">
+                    </td>
+                </tr>
+                <tr>
+                    <th>전화번호</th>
+                    <td>
+                        <div style="display: flex;">
+                            <input type="number" id="tel1" th:value="${reservationDTO.tel1}" name="tel1"
+                                   class="form-control" maxlength="3" required style="flex: 1;">-
+                            <input type="number" id="tel2" th:value="${reservationDTO.tel2}" name="tel2"
+                                   class="form-control" maxlength="4" required style="flex: 1;">-
+                            <input type="number" id="tel3" th:value="${reservationDTO.tel3}" name="tel3"
+                                   class="form-control" maxlength="4" required style="flex: 1;">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>예약인원</th>
+                    <td>
+                        <select class="form-select" aria-label="Default select example" id="member" name="member"></select>
+                    </td>
+                </tr>
+            </table>
+            <div class="button-container" style="margin-top:25px; text-align: center;">
+                <button type="submit" class="btn btn-warning">수정하기</button>
+                <button type="button" class="btn btn-outline-primary" id="goBackBtn">돌아가기</button>
+            </div>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const goBackBtn = document.getElementById("goBackBtn");
+            goBackBtn.addEventListener("click", function() {
+                let rvno =/*[[${reservationDTO.rvno}]]*/ '';
+                let search = /*[[${search}]]*/ '';
+                window.location.href = '/admin/reservationInfo?&search=' + search + '&rvno=' + rvno;
+
+            });
+        });
+
+        function populateDropdown(extras) {
+            let reservationDTO = {
+                member: /*[[${reservationDTO.member}]]*/ 0 //
+            };
+
+            $('#member').empty();
+            for (let i = 1; i <= extras; i++) {
+                let option = $('<option>', {
+                    value: i,
+                    text: i + '명',
+                    selected: i === reservationDTO.member
+                });
+                $('#member').append(option);
+            }
+        }
+
+        $(document).ready(function() {
+            let extras = /*[[${extras}]]*/ 16;
+            let prevDate = $("input[name='regDate']").val();  // 현재 날짜를 저장
+
+            populateDropdown(extras);
+
+            $("input[name='regDate']").on('change', function() {
+                let selectedDate = $(this).val();
+
+                $.ajax({
+                    url: "/admin/changeregdate",
+                    type: "GET",
+                    data: { regDate: selectedDate },
+                    success: function(response) {
+                        if (response.extras && response.extras > 0) {
+                            let extras = response.extras;
+                            populateDropdown(extras);
+                            prevDate = selectedDate;
+                        } else {
+                            alert("해당날짜의 예약이 가득 찼습니다.");
+                            $("input[name='regDate']").val(prevDate);
+                        }
+                    },
+                    error: function(error) {
+                        $("input[name='regDate']").val(prevDate);
+                    }
+                });
+            });
+        });
+
+    </script>
+</div>
+
+
+</html>

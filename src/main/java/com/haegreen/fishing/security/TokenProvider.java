@@ -1,9 +1,6 @@
 package com.haegreen.fishing.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -19,26 +16,26 @@ public class TokenProvider {
     // 시크릿키는 UUID를 쓰거나, 어렵게 쓰거나
     private static final String SECRET_KEY = "FlRpX30pMqDbiAkmlfArbrmVkDD4RqISskGZmBFax5oGVxzXXWUzTR5JyskiHMIV9M10icegkpi46AdvrcXlE6CmTUBc6IFbTPiD";
 
-    public String create(UserDetails userDetails) {
+    public String create(CustomUserDetails customUserDetails) {
         // 유효 기간 설정
-        Date expiryDate = Date.from(Instant.now().plus(60, ChronoUnit.MINUTES));
+        Date expiryDate = Date.from(Instant.now().plus(10, ChronoUnit.MINUTES));
 
         return Jwts.builder()
                 .signWith(SignatureAlgorithm.HS512, SECRET_KEY) // HS512 알고리즘 이용 , 시크릿키
-                .setSubject(userDetails.getUsername()) // 대상을 email로 설정
-                .setIssuer("room app") // 발급자 설정. 해당 JWT을 발급한 대상
+                .setSubject(customUserDetails.getMember().getId()) // 대상을 id 설정
+                .setIssuer("haegreen app") // 발급자 설정. 해당 JWT을 발급한 대상
                 .setIssuedAt(new Date()) // 발급 시작 시점
                 .setExpiration(expiryDate) // 발급 종료 시점
                 .compact(); // JWT을 문자열로 반환
     }
 
-    public String createRefreshToken(UserDetails userDetails) {
-        Date expiryDate = Date.from(Instant.now().plus(7, ChronoUnit.DAYS));
+    public String createRefreshToken(CustomUserDetails customUserDetails) {
+        Date expiryDate = Date.from(Instant.now().plus(91, ChronoUnit.DAYS));
 
         return Jwts.builder()
                 .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
-                .setSubject(userDetails.getUsername())
-                .setIssuer("room app")
+                .setSubject(customUserDetails.getMember().getId())
+                .setIssuer("haegreen app")
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .compact();
@@ -55,7 +52,11 @@ public class TokenProvider {
             // 토큰이 만료되었다면, 이전 토큰에 대한 정보는 여전히 유효하기 때문에,
             // ExpiredJwtException 객체를 사용하여 해당 정보에 액세스할 수 있음
             return e.getClaims().getSubject();
-        } catch (Exception e) {
+        } catch (SignatureException e) {
+            // 토큰의 서명이 유효하지 않은 경우
+            log.error("Invalid token signature : ", e);
+            return null; // 또는 throw new YourCustomException("Invalid token signature");
+        }catch (Exception e) {
             log.error(e);
             return null;
         }
@@ -73,7 +74,7 @@ public class TokenProvider {
 
             return expirationDate.before(now);
         } catch (Exception e) {
-            log.error("token이 만료 되었습니다.");
+            log.info(e);
             return true;
         }
     }

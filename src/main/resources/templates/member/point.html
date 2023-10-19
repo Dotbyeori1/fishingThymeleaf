@@ -71,8 +71,11 @@
                 <li class="list active">
                   <a href="=/member/point"> <i class="las la-briefcase"></i> 포인트 </a>
                 </li>
-                <li class="list">
-                  <a href="/reservation/list"> <i class="las la-briefcase"></i> 예약현황 </a>
+                <li class="list" sec:authorize="isAnonymous()">
+                  <a href="/reservation/check"> <i class="las la-briefcase"></i> 예약확인 </a>
+                </li>
+                <li class="list" sec:authorize="isAuthenticated()">
+                  <a href="/reservation/details"> <i class="las la-briefcase"></i> 예약확인 </a>
                 </li>
                 <li class="list has-children">
                   <a href="javascript:void(0)"> <i class="las la-user-circle"></i> 프로필 </a>

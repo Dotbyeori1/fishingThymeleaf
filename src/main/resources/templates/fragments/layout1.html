@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
-    <meta charset="UTF-8">
+    <meta name="viewport" charset="UTF-8" content="width=device-width, initial-scale=1.0">
     <title>해그린피싱</title>
 
     <!-- bootstrap -->
@@ -27,13 +27,13 @@
 
     <!-- back to top area start -->
     <div class="back-to-top">
-        <span class="back-top"> <i class="las la-angle-up"></i> </span>
+        <span class="back-top"> <i class="las la-angle-up"></i></span>
     </div>
     <!-- back to top area end -->
 
     <!-- Mouse Cursor start -->
-    <div class="mouse-move mouse-outer"></div>
-    <div class="mouse-move mouse-inner"></div>
+<!--    <div class="mouse-move mouse-outer"></div>-->
+<!--    <div class="mouse-move mouse-inner"></div>-->
     <!-- Mouse Cursor Ends -->
 
     <!-- jquery -->
@@ -67,6 +67,15 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+    <style>
+        @media (max-width: 995px) {
+            div, div *:not(h1):not(h2):not(h3):not(i):not(footer):not(.footer, .footer *):not(a) {
+                font-size: 1rem;
+            }
+        }
+
+    </style>
 
 </head>
 <body>

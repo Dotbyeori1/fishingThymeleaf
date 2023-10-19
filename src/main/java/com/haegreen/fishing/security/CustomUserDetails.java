@@ -23,7 +23,6 @@ public class CustomUserDetails implements UserDetails {
     // CusteomtuserDetails(member)
     // 를 하는 순간 CustomUserDetails에 member 객체에 저장됨!
 
-    // member.getRole()만 하면 스프링 시큐리티가 인식을 안 한다고 이렇게 해주는거임
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<Role> roles = Collections.singleton(member.getRole());

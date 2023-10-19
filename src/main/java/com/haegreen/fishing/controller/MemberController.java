@@ -9,14 +9,13 @@ import com.haegreen.fishing.security.TokenProvider;
 import com.haegreen.fishing.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +23,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -38,11 +36,10 @@ public class MemberController {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    @Autowired
-    private AuthenticationManager authenticationManager; // 스프링 시큐리티 로그인
+    private final AuthenticationManager authenticationManager;
 
     @GetMapping(value = "join")
-    public String memberForm(HttpServletRequest request, @RequestParam(name = "error", required = false) String error, Model model){
+    public String memberForm(@RequestParam(name = "error", required = false) String error, Model model){
         model.addAttribute("memberFormDto", new MemberFormDto());
         if (error != null && error.equals("signup")) {
             model.addAttribute("errorMessage", "회원 가입이 필요합니다.");
@@ -52,34 +49,38 @@ public class MemberController {
     }
 
     @PostMapping(value = "join")
-    public String memberForm(@Valid MemberFormDto memberFormDto, BindingResult bindingResult, Model model,
-                             @RequestParam String tel1, @RequestParam String tel2, @RequestParam String tel3) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("memberFormDto", memberFormDto);
-            return "redirect:/member/join";
-        }
+    public ResponseEntity<?> memberForm(@Valid MemberFormDto memberFormDto) throws Exception  {
 
-        String tel = tel1 + "-" + tel2 + "-" + tel3;
+        String tel = memberFormDto.getTel1() + "-" + memberFormDto.getTel2() + "-" + memberFormDto.getTel3();
         memberFormDto.setTel(tel);
+
+        if (memberFormDto.getPassword().length() <= 5) {
+            ResponseDTO responseDTO = new ResponseDTO();
+            responseDTO.setError("비밀번호는 6자리 이상으로 해주세요.");
+            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
+        }
 
         try{
             Member member = Member.createMember(memberFormDto, passwordEncoder);
             memberService.saveMember(member);
         }catch (IllegalStateException e){
-            model.addAttribute("errorMessage", e.getMessage());
-            return "member/join";
-
+            ResponseDTO responseDTO = new ResponseDTO();
+            responseDTO.setError("이미 회원가입 된 계정입니다.");
+            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
         }
-        return "redirect:/";
+            ResponseDTO responseDTO = new ResponseDTO();
+             responseDTO.setSuccess("회원가입이 완료되었습니다.");
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @GetMapping(value = "login")
-    public String loginMember(Model model) {
+    public String loginMember(@ModelAttribute("errorMessage") String errorMessage, Model model) {
+        model.addAttribute("errorMessage", errorMessage);
         return "member/login";
     }
 
     @PostMapping("login")
-    public ResponseEntity<?> login(@RequestBody MemberFormDto memberFormDto) throws Exception {
+    public ResponseEntity<?> login(@ModelAttribute("errorMessage") String errorMessage, @RequestBody MemberFormDto memberFormDto) throws Exception {
         Authentication authentication; // 스프링 시큐리티 로그인 객체 불러오기
 
         try { // 스프링 시큐리티를 이용한 로그인 확인.
@@ -91,19 +92,19 @@ public class MemberController {
             );
         } catch (BadCredentialsException e) { // 틀렸을때 예외 처리
             ResponseDTO responseDTO = new ResponseDTO();
-            responseDTO.setError("ID나 PASSWORD가 틀립니다.");
+            responseDTO.setError("아이디나 패스워드가 틀립니다.");
             return ResponseEntity.badRequest().body(responseDTO);
         } // 틀리면 걍 객체를 반환 시키는게 더 빠름 - ajax 처리.
 
         // 맞으면 인증, 권한 부여하기
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
         // token을 만들어서 발송하는 부분
-        String token = tokenProvider.create(userDetails);
+        String token = tokenProvider.create(customUserDetails);
         MemberFormDto responseMemberFormDto = new MemberFormDto();
         responseMemberFormDto.setToken(token);
-        String refreshToken = tokenProvider.createRefreshToken(userDetails);
+        String refreshToken = tokenProvider.createRefreshToken(customUserDetails);
         Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
         member.setRefreshToken(refreshToken);
         memberRepository.save(member);
@@ -112,26 +113,32 @@ public class MemberController {
     }
 
     @GetMapping("memberinfo")
-    public String memberInfo(Model model) {
+    public String memberInfo(Model model, RedirectAttributes redirectAttributes) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-        if(member == null){
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof CustomUserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/member/login";
         }
+
+        Member member = ((CustomUserDetails) principal).getMember();
 
         model.addAttribute("memberInfo", member);
         return "member/memberinfo";
     }
 
     @GetMapping(value = "update")
-    public String memberInfoEdit(Model model, MemberFormDto memberFormDto){
+    public String memberInfoEdit(Model model, MemberFormDto memberFormDto,RedirectAttributes redirectAttributes){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-        if(member == null){
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof CustomUserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/member/login";
         }
+
+        Member member = ((CustomUserDetails) principal).getMember();
 
         memberFormDto.setEmail(member.getEmail());
         memberFormDto.setName(member.getName());
@@ -162,11 +169,6 @@ public class MemberController {
         String tel = tel1 + "-" + tel2 + "-" + tel3;
         memberFormDto.setTel(tel);
 
-        if(memberFormDto.getEmail().equals("test100@test.com") || memberFormDto.getEmail().equals("test101@test.com")){
-            redirectAttributes.addFlashAttribute("errorMessage", "테스트 계정은 프로필을 변경할 수 없습니다!!!!!!!!!!!!!!!!!!!!");
-            return "redirect:/member/update";
-        }
-
         // 세이브와 동시에 스프링 시큐리티 반영
         CustomUserDetails customUserDetails = new CustomUserDetails(memberService.editMember(memberFormDto));
         SecurityContextHolder.getContext().setAuthentication
@@ -176,13 +178,15 @@ public class MemberController {
     }
 
     @GetMapping(value = "changepw")
-    public String changePassword(Model model) {
+    public String changePassword(Model model, RedirectAttributes redirectAttributes) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-        if(member == null){
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof CustomUserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/member/login";
         }
+
         return "member/changepw";
     }
 
@@ -191,16 +195,14 @@ public class MemberController {
                                  @ModelAttribute MemberFormDto memberFormDto,
                                  RedirectAttributes redirectAttributes){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-        if(member == null){
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof CustomUserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/member/login";
         }
 
-        if(member.getEmail().equals("test100@test.com") || member.getEmail().equals("test101@test.com")){
-            redirectAttributes.addFlashAttribute("errorMessage", "테스트 계정은 비밀번호을 변경할 수 없습니다!!!!!!!!!!!!!!!!!!!!");
-            return "redirect:/member/changepw";
-        }
+        Member member = ((CustomUserDetails) principal).getMember();
 
         if(!passwordEncoder.matches(currentPassword, member.getPassword())){
             redirectAttributes.addFlashAttribute("errorMessage", "현재 비밀번호가 틀립니다.");
@@ -216,15 +218,18 @@ public class MemberController {
     }
 
     @GetMapping(value = "point")
-    public String point(Model model){
+    public String point(Model model, RedirectAttributes redirectAttributes){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-        if(member == null){
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof CustomUserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/member/login";
         }
 
+        Member member = ((CustomUserDetails) principal).getMember();
         model.addAttribute("memberInfo", member);
+
         return "member/point";
     }
 
@@ -234,12 +239,7 @@ public class MemberController {
     }
 
     @PostMapping(value = "forgotpw")
-    public String sendNewpw(Model model, @RequestParam String email, RedirectAttributes redirectAttributes){
-
-        if(email.equals("test100@test.com") || email.equals("test101@test.com")){
-            redirectAttributes.addFlashAttribute("errorMessage", "테스트 계정은 비밀번호을 초기화 할 수 없습니다!!!!!!!");
-            return "redirect:/member/forgotpw";
-        }
+    public String sendNewpw(Model model, @RequestParam String email){
 
         Optional<Member> memberOptional = Optional.ofNullable(memberRepository.findByEmail(email));
 
@@ -252,13 +252,13 @@ public class MemberController {
 
             memberService.sendEmail(
                     email,
-                    "TodayTonight 비밀번호 안내",
+                    "해그린피싱 비밀번호 안내",
                     "초기화된 비밀번호 : " + newPassword + "\n" + "※ 비밀번호 초기화 후에는 비밀번호 재설정이 필요합니다 ※"
             );
-            model.addAttribute("message", "A new password has been sent to your email. Please change your new password");
+            model.addAttribute("message", "변경된 비밀번호가 이메일로 전송되었습니다. 변경된 비밀번호를 입력 후 비밀번호 변경에서 비밀번호를 변경해주세요.");
             //정상전송되면 성공 메시지 띄우기
         } else {
-            model.addAttribute("error", "There is no account associated with this email.");
+            model.addAttribute("error", "이메일 전송 실패");
         } //실패하면 에러메시지 띄우기
 
         return "member/forgotpw";

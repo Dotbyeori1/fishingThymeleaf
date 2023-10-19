@@ -14,6 +14,7 @@ public class ReservationDTO {
 
     private Long rvno; //예약번호
     private String message; //요청사항
+    private String region; // 지역
     private String email;
 
     private String tel; // 전화번호
@@ -28,7 +29,17 @@ public class ReservationDTO {
     private String depositName; // 입금자 명
 
     private int money; // 돈
+    private String formatMoney;
 
     private boolean state;
-    private boolean cancel;
+
+    private int extraMembers; // 남은인원 출력
+
+    public void setRegDate(String regDate) {
+        if ("".equals(regDate)) {
+            this.regDate = null;
+        } else {
+            this.regDate = LocalDate.parse(regDate);
+        }
+    }
 }

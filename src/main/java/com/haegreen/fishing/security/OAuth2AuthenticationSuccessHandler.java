@@ -25,6 +25,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Autowired
     MemberRepository memberRepository;
+    @Autowired
+    TokenProvider tokenProvider;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -46,8 +48,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
         // try catch 해야하는데 생각이 안남 걍 다시 불러오기
         Member member = memberRepository.findByEmail(email);
-        CustomUserDetails customUserDetails = new CustomUserDetails(member); // Customer한 UserDetails에 로그인된 정보 집어넣기
-        TokenProvider tokenProvider = new TokenProvider(); // 토큰 인쇄기 불러오기
+        CustomUserDetails customUserDetails = new CustomUserDetails(member); // Customer한 UserDetails에 로그인된 정보 집어넣기// 토큰 인쇄기 불러오기
         String token = tokenProvider.create(customUserDetails); // 토큰 발행!
         SecurityContextHolder.getContext().setAuthentication // 스프링 시큐리티에도 로그인 사실 알려주기. 여러번 쓰지만 로그인한 정보를 담기위해 CustomUserDetails애 담아야함!
                 (new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities()));

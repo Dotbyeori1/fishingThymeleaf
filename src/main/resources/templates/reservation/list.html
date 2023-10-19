@@ -5,11 +5,7 @@
 
 <!-- 사용자 CSS 추가 -->
 <th:block layout:fragment="css">
-    <style>
-        .fieldError {
-            color: #bd2130;
-        }
-    </style>
+
 </th:block>
 
 <!-- 사용자 스크립트 추가 -->
@@ -32,14 +28,22 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         const reservations = /*[[${reservationDTOS}]]*/ [];
+        const reservationDates = /*[[${reservationDateDTOS}]]*/ [];
         /*]]>*/
     </script>
 
     <style>
         .calendar {
-            width: 1000px;
+            max-width: 950px;
             margin: 50px auto;
         }
+
+        @media (max-width: 995px) {
+            .calendar {
+                min-height: 820px;
+            }
+        }
+
 
         .header {
             display: flex;
@@ -47,9 +51,6 @@
             align-items: center;
         }
 
-        .year-month {
-            font-size: 35px;
-        }
 
         .days {
             display: flex;
@@ -64,17 +65,22 @@
         .dates {
             display: flex;
             flex-flow: row wrap;
-            height: 800px;
-            border-top: 1px solid #333333;
-            border-right: 1px solid #333333;
+            min-height: 500px;
+            border-top: 1px solid #b9bbbe;
+            border-right: 1px solid #b9bbbe;
+        }
+
+        .dates2 {
+            border-top: 1px solid #b9bbbe;
+            border-right: 1px solid #b9bbbe;
         }
 
         .date {
             width: calc(100% / 7);
             padding: 15px;
-            text-align: right;
-            border-bottom: 1px solid #333333;
-            border-left: 1px solid #333333;
+            text-align: left;
+            border-bottom: 1px solid #b9bbbe;
+            border-left: 1px solid #b9bbbe;
         }
 
         .day:nth-child(7n + 1),
@@ -87,188 +93,157 @@
             color: #396EE2;
         }
 
-        .other-month {
-            opacity: 0;
+        .override-color {
+            color: black !important;
         }
 
     </style>
+    <section class="about-area pat-50 pab-75">
+        <div class="container">
+            <div class="row justify-content-between">
+                <div style="position:relative; max-width: 950px; height: 60px; margin: 50px auto; border: #1a1e21 2px solid; border-radius: 10px;">
+                      <span style="position:absolute; left:10px; width: 200px; margin: 10px 0;">
+                          <select id="monthSelector" class="form-select">
+                                <option value="0">1월</option>
+                                <option value="1">2월</option>
+                                <option value="2">3월</option>
+                                <option value="3">4월</option>
+                                <option value="4">5월</option>
+                                <option value="5">6월</option>
+                                <option value="6">7월</option>
+                                <option value="7">8월</option>
+                                <option value="8">9월</option>
+                                <option value="9">10월</option>
+                                <option value="10">11월</option>
+                                <option value="11">12월</option>
+                          </select>
+                      </span>
+                    <span id="tab-buttons" style="position:absolute; right: 10px; width:90px; margin: 10px 0;">
+                          <button class="btn btn-outline-dark" style="width: 40px; height: 40px;"
+                                  onclick="changeTab('tab1')"><i
+                                  class="las la-bars"></i></button>
+                          <button class="btn btn-outline-dark" style="width: 40px; height: 40px;"
+                                  onclick="changeTab('tab2')"><i
+                                  class="las la-calendar"></i></button>
+                    </span>
+                </div>
+                <div id="tab-contents">
+                    <div id="tab1" class="tab">
+                        <table class="table table-bordered" style="max-width: 950px; margin: 0 auto 50px auto;">
+                            <thead>
+                            <tr class="table-light">
+                                <th colspan="4" style="text-align: center;"><span class="detailDate">${fullDate}</span>(<span
+                                        class="detailDayOfWeek">${dayNames[dayOfWeek]}</span>)
+                                </th>
+                            </tr>
+                            <tr class="table-light">
+                                <th style="width:17%; text-align: center;">예약</th>
+                                <th style="width:25%;text-align: center;">공지사항</th>
+                                <th style="width:35%;text-align: center;">예약명단</th>
+                                <th style="width:23%;text-align: center;">남은인원</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <button class="btn btn-primary detailBtnClass linkDate" data-full-date="${fullDate}"
+                                            data-btn-class="${btnClass}"
+                                            data-btn-text="${btnText}" data-btn-text2="${btnText2}"
+                                            data-btn-class2="${btnClass2}"
+                                            onclick='redirectToReservation(this)'
+                                            style="width: 100%; height: 100%;">
+                                    </button>
+                                </td>
+                                <td class="dataMessage">${message}</td>
+                                <td>
+                                    <div style="margin-bottom: 5px;">
+                                        <span class="btn-light btn-sm">종류</span>&nbsp;
+                                        <span class="dataFishingSort" style="margin-top: 2px; font-size: 14px">${finshingSort}</span>
+                                    </div>
+                                    <div class="dataRegInfo">${regInfo}</div>
+                                </td>
+                                <td class="detailExtraMembers">${extraMembers}명</td>
+                            </tr>
+                            </tbody>
+                        </table>
 
-    <div class="container">
-        <div class="calendar">
-            <div class="header">
-                <div class="year-month"></div>
-                <div style="width: 200px;">
-                <select  id="monthSelector" class="form-select">
-                    <option value="0">1월</option>
-                    <option value="1">2월</option>
-                    <option value="2">3월</option>
-                    <option value="3">4월</option>
-                    <option value="4">5월</option>
-                    <option value="5">6월</option>
-                    <option value="6">7월</option>
-                    <option value="7">8월</option>
-                    <option value="8">9월</option>
-                    <option value="9">10월</option>
-                    <option value="10">11월</option>
-                    <option value="11">12월</option>
-                </select>
+                        <table class="table table-bordered border-dark"
+                               style="max-width: 950px; margin: 0 auto 50px auto;">
+                            <thead>
+                            <tr class="table-light">
+                                <th style="width:20%; text-align: center;">날짜</th>
+                                <th style="width:22%; text-align: center;">예약</th>
+                                <th style="width:35%; text-align: center;">예약명단</th>
+                                <th style="width:23%; text-align: center;">남은인원</th>
+                            </tr>
+                            </thead>
+                            <tbody class="dates2">
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <div id="tab2" class="tab" style="display:none;">
+
+                        <div class="calendar" style="margin-top: -25px;">
+                            <div class="main">
+                                <div class="days">
+                                    <div class="day">일</div>
+                                    <div class="day">월</div>
+                                    <div class="day">화</div>
+                                    <div class="day">수</div>
+                                    <div class="day">목</div>
+                                    <div class="day">금</div>
+                                    <div class="day">토</div>
+                                </div>
+                                <div class="dates"></div>
+                            </div>
+                        </div>
+
+                        <table class="table table-bordered" style="max-width: 950px; margin: 0 auto 50px auto;">
+                            <thead>
+                            <tr class="table-light">
+                                <th colspan="4" style="text-align: center;"><span class="detailDate">${fullDate}</span>(<span
+                                        class="detailDayOfWeek">${dayNames[dayOfWeek]}</span>)
+                                </th>
+                            </tr>
+                            <tr class="table-light">
+                                <th style="width:17%; text-align: center;">예약</th>
+                                <th style="width:25%;text-align: center;">공지사항</th>
+                                <th style="width:35%;text-align: center;">예약명단</th>
+                                <th style="width:23%;text-align: center;">남은인원</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <button class="btn btn-primary detailBtnClass linkDate" data-full-date="${fullDate}"
+                                            data-btn-class="${btnClass}"
+                                            data-btn-text="${btnText}" data-btn-text2="${btnText2}"
+                                            data-btn-class2="${btnClass2}"
+                                            onclick='redirectToReservation(this)'
+                                            style="width: 100%; height: 100%;">
+                                    </button>
+                                </td>
+                                <td class="dataMessage">${message}</td>
+                                <td>
+                                    <div style="margin-bottom: 5px;">
+                                        <span class="btn-light btn-sm">종류</span>&nbsp;
+                                        <span class="dataFishingSort" style="margin-top: 2px; font-size: 14px">${finshingSort}</span>
+                                    </div>
+                                    <div class="dataRegInfo">${regInfo}</div>
+                                </td>
+                                <td class="detailExtraMembers">${extraMembers}명</td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
                 </div>
-            </div>
-            <div class="main">
-                <div class="days">
-                    <div class="day">일</div>
-                    <div class="day">월</div>
-                    <div class="day">화</div>
-                    <div class="day">수</div>
-                    <div class="day">목</div>
-                    <div class="day">금</div>
-                    <div class="day">토</div>
-                </div>
-                <div class="dates"></div>
             </div>
         </div>
-    </div>
-
-    <script type="text/javascript">
-        // Date 객체 생성
-        let date = new Date();
-
-        // 예시로, 날짜별로 예약이 얼마나 찼는지 계산
-        const reservationCountByDate = {};
-        reservations.forEach(reservation => {
-            const date = reservation.regDate;
-            if (reservationCountByDate[date]) {
-                reservationCountByDate[date] += reservation.member;
-            } else {
-                reservationCountByDate[date] = reservation.member;
-            }
-        });
-
-        const renderCalendar = () => {
-            const viewYear = date.getFullYear();
-            const viewMonth = date.getMonth();
-
-            // year-month 채우기
-            document.querySelector('.year-month').textContent = `${viewYear}년 ${viewMonth + 1}월`;
-
-            // 지난 달 마지막 Date, 이번 달 마지막 Date
-            const prevLast = new Date(viewYear, viewMonth, 0);
-            const thisLast = new Date(viewYear, viewMonth + 1, 0);
-
-            const PLDate = prevLast.getDate();
-            const PLDay = prevLast.getDay();
-
-            const TLDate = thisLast.getDate();
-            const TLDay = thisLast.getDay();
-
-            // 오늘 날짜 그리기
-            const today = new Date();
-            if (viewMonth === today.getMonth() && viewYear === today.getFullYear()) {
-                for (let date of document.querySelectorAll('.this')) {
-                    if (+date.innerText === today.getDate()) {
-                        date.classList.add('today');
-                        break;
-                    }
-                }
-            }
-
-            // Dates 기본 배열들
-            const prevDates = [];
-            const thisDates = [...Array(TLDate + 1).keys()].slice(1);
-            const nextDates = [];
-
-            // prevDates 계산
-            if (PLDay !== 6) {
-                for (let i = 0; i < PLDay + 1; i++) {
-                    prevDates.unshift(PLDate - i);
-                }
-            }
-
-            // nextDates 계산
-            for (let i = 1; i < 7 - TLDay; i++) {
-                nextDates.push(i)
-            }
-
-            // Dates 합치기
-            const dates = prevDates.concat(thisDates, nextDates);
-
-            // Dates 정리
-            dates.forEach((currentDate, i) => {
-                const paddedMonth = String(viewMonth + 1).padStart(2, '0');
-                const paddedDate = String(currentDate).padStart(2, '0');
-                const fullDate = `${viewYear}-${paddedMonth}-${paddedDate}`;
-                let memberCount = reservationCountByDate[fullDate] || 0;
-                let extras = 16; // 예약 가능한 최대 인원
-                let extraMembers = extras - memberCount;
-                let isAvailable = (extras - memberCount > 0);
-                let btnClass = isAvailable ? 'btn-primary' : 'btn-danger';
-                let btnClass2 = isAvailable ? 'btn-success' : 'btn-warning';
-                let btnText = isAvailable ? '예약하기' : '예약대기';
-
-                let isThisMonth = i >= prevDates.length && i < (prevDates.length + thisDates.length);
-
-                if (isThisMonth) {
-                    dates[i] = `
-                     <div class="date">
-                          <div class="${isThisMonth ? 'this-month' : 'other-month'}">
-                            ${currentDate}
-                                <span class="rounded-pill ${btnClass}" style="padding: 3px;">
-                                   남은인원 ${extraMembers}명
-                                </span>
-                                <div>
-                                   <button type="button" class="btn ${btnClass2}"
-                                   onclick="window.location.href='/reservation/register?regDate=${fullDate}'"
-                                   style="margin-top: 2px;">
-                                  ${btnText}
-                                  </button>
-                                </div>
-                         </div>
-                    </div>
-                 `;
-                } else {
-                    // 이 부분을 현재 달이 아닐 때는 버튼을 비활성화하거나 다르게 표시하도록 설정
-                    dates[i] = `
-                         <div class="date">
-                         </div>
-                     `;
-                }
-            });
-
-            console.log(reservationCountByDate);
-
-            // Dates 그리기
-            document.querySelector('.dates').innerHTML = dates.join('');
-        }
-
-        renderCalendar();
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const monthSelector = document.getElementById("monthSelector");
-
-            // 현재 달과 이후의 두 달을 출력
-            const options = [];
-            for (let i = 0; i < 3; i++) {
-                const monthIndex = (currentMonth + i) % 12;
-                const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
-                const monthName = monthNames[monthIndex];
-                options.push(` <option value = "${monthIndex}">${monthName} </option>`);
-            }
-
-            monthSelector.innerHTML = options.join('');
-
-            monthSelector.addEventListener("change", function () {
-                const selectedMonth = parseInt(this.value);
-                date.setMonth(selectedMonth);
-                renderCalendar();
-            });
-        }
-        )
-        ;
-    </script>
-
-
+        <div th:if="${message}" th:text="${message}" id="flashMessage" style="display:none;"></div>
+        <script th:src="@{/assets/js/calendarscript.js}"></script>
+    </section>
 </div>
 
 </html>

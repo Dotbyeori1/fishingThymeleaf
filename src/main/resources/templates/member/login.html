@@ -9,10 +9,11 @@
 <meta name="csrf-token" th:content="${_csrf.token}">
 
 <div layout:fragment="content">
-    <div class="container">
+    <div class="container mab-25">
         <div class="login-wrapper-flex">
             <div class="login-wrapper-contents login-padding">
                 <p id="message" class="text-danger"></p>
+                <p th:if="${errorMessage}" th:text="${errorMessage}" class="text-danger"></p>
                 <form class="login-wrapper-contents-form custom-form" id="loginBtn" method="post">
                     <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="email"> Email </label>
@@ -27,6 +28,11 @@
                             <div class="show-icon"><i class="las la-eye-slash"></i></div>
                             <span class="hide-icon"> <i class="las la-eye"></i> </span>
                         </div>
+                    </div>
+                    <div class="checkbox-inline mt-4">
+                        <input class="check-input" type="checkbox" id="check15">
+                        <label class="checkbox-label" for="check15">자동로그인 </label>
+                        <p id="checkboxError" class="text-danger"></p>
                     </div>
                     <button id="login" class="submit-btn w-100 mt-4" type="button"> 로그인</button>
                     <span class="account color-light mt-3"> 계정이 없으신가요? <a class="color-one"
@@ -44,7 +50,7 @@
                     <div class="login-others">
                         <div class="login-others-single">
                             <a href="/oauth2/authorization/kakao" class="login-others-single-btn w-100">
-                                <img th:src="@{/assets/img/single-page/kakaologo.jpg}" width="22px" height="22px"
+                                <img th:src="@{/assets/img/single-page/kakaologo.jpg}" width="24px" height="24px"
                                      alt="">
                                 <span class="login-para"> 카카오 로그인 </span>
                             </a>
@@ -55,6 +61,13 @@
                                 <span class="login-para">구글 로그인 </span>
                             </a>
                         </div>
+<!--                        <div class="login-others-single">-->
+<!--                            <a href="/oauth2/authorization/naver" class="login-others-single-btn w-100">-->
+<!--                                <img th:src="@{/assets/img/single-page/naverlogin.png}" alt="" width="24px"-->
+<!--                                     height="24px">-->
+<!--                                <span class="login-para">네이버 로그인 </span>-->
+<!--                            </a>-->
+<!--                        </div>-->
                     </div>
                 </div>
             </div>
@@ -63,9 +76,9 @@
     <script type="text/javascript">
         $(document).ready(function () {
             $('#login').click(function () {
-                var email = $('#email').val();
-                var password = $('#password').val();
-                var formData = {
+                let email = $('#email').val();
+                let password = $('#password').val();
+                let formData = {
                     email: email,
                     password: password
                 };
@@ -84,8 +97,9 @@
                     $('#message_password').text('');
                 }
 
-                var headers = {}; // headers 변수를 정의합니다.
+                let headers = {}; // headers 변수를 정의합니다.
                 headers[$('meta[name=csrf-header-name]').attr('content')] = $('meta[name=csrf-token]').attr('content');
+                let isChecked = $('#check15').is(':checked');
                 $.ajax({
                     type: 'POST',
                     url: '/member/login',
@@ -94,19 +108,29 @@
                     headers: headers,
                     success: function (data) {
                         localStorage.removeItem('token')
-                        var token = data.token; // 서버에서 반환한 토큰 값
-                        localStorage.setItem('token', token); // 토큰을 localStorage에 저장
+                        if (isChecked) {
+                            let token = data.token;
+                            localStorage.setItem('token', token);
 
-                        var prevPage = localStorage.getItem('prevPage'); // 이전 페이지의 URL을 가져옵니다.
-                        if (prevPage) {
-                            localStorage.removeItem('prevPage'); // 이전 페이지 URL을 제거합니다.
-                            window.location.href = prevPage; // 이전 페이지로 이동합니다.
+                            let prevPage = sessionStorage.getItem('prevPage'); // 이전 페이지의 URL을 가져옵니다.
+                            if (prevPage) {
+                                sessionStorage.removeItem('prevPage'); // 이전 페이지 URL을 제거합니다.
+                                window.location.href = prevPage; // 이전 페이지로 이동합니다.
+                            } else {
+                                window.location.href = "/"; // 이전 페이지가 없는 경우 메인 페이지로 이동합니다.
+                            }
                         } else {
-                            window.location.href = "/"; // 이전 페이지가 없는 경우 메인 페이지로 이동합니다.
+                            let prevPage = sessionStorage.getItem('prevPage');
+                            if (prevPage) {
+                                sessionStorage.removeItem('prevPage');
+                                window.location.href = prevPage;
+                            } else {
+                                window.location.href = "/";
+                            }
                         }
                     },
-                    error: function (xhr) {
-                        var responseDTO = JSON.parse(xhr.responseText);
+                    error: function (jqXHR) {
+                        let responseDTO = JSON.parse(jqXHR.responseText);
                         $('#message').text(responseDTO.error);
                     }
                 });

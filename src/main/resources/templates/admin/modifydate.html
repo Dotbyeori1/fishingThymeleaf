@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<div layout:fragment="content">
+    <div class="container" style="margin: 50px auto;">
+        <h1>예약날짜관리</h1>
+        <p>날짜별로 예약상태를 변경 할 수 있습니다.</p>
+
+        <form id="form1" th:action="@{/admin/modifydate}" method="get" style="margin-top: 25px;">
+            <div class="form-group row">
+                <div class="col-sm-3">
+                    <input type="date" class="form-control" id="regDate" name="regDate" th:value="${param.regDate} != null? ${param.regDate}:${reservationDateDTO.regDate}">
+                </div>
+            </div>
+        </form>
+
+        <form style="margin-top: 25px;">
+            <input type="hidden" name="rdate" th:value="${reservationDateDTO.rdate}">
+            <table class="table table-bordered">
+                <tr>
+                    <th style="width: 35%;">예약 상태 변경</th>
+                    <td style="width: 65%;">
+                        <input class="form-check-input" type="radio" name="available" id="available" value="true"
+                               th:checked="${reservationDateDTO.available}">
+                        <label class="form-check-label" for="available">
+                            예약가능
+                        </label>
+                        <input class="form-check-input" type="radio" name="available" id="unavailable" value="false"
+                               th:checked="${!reservationDateDTO.available}">
+                        <label class="form-check-label" for="unavailable">
+                            예약불가
+                        </label>&nbsp;&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <th>예약 불가 사유</th>
+                    <td>
+                        <input type="text" class="form-control" name="message" th:value="${reservationDateDTO.message}"
+                               placeholder="예약이 불가능한 사유를 입력하세요. ex) 추석연휴, 설날연휴">
+                    </td>
+                </tr>
+            </table>
+            <button class="btn btn-primary w-100 mt-4" type="button" id="applyButton">적용하기</button>
+        </form>
+
+        <script>
+            $(document).ready(function() {
+                // 첫 번째 폼에서 날짜 선택 시 폼 제출
+                $('#form1 #regDate').change(function() {
+                    $(this).closest('form').submit();
+                });
+
+                // 두 번째 폼에서 '적용하기' 버튼 클릭 시 AJAX 요청
+                $('#applyButton').click(function() {
+                    $.ajax({
+                        url: '/admin/modifyavailable',
+                        method: 'POST',
+                        data: {
+                            rdate: $("input[name='rdate']").val(),
+                            available: $("input[name='available']:checked").val(),
+                            message: $("input[name='message']").val()
+                        },
+                        success: function() {
+                            alert("적용되었습니다.");
+                        },
+                        error: function() {
+                            alert("적용에 실패했습니다.");
+                        }
+                    });
+                });
+            });
+        </script>
+
+    </div>
+
+</div>
+</html>

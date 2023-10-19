@@ -71,8 +71,11 @@
                                 <li class="list">
                                     <a href="/member/point"> <i class="las la-briefcase"></i> 포인트 </a>
                                 </li>
-                                <li class="list">
-                                    <a href="/reservation/list"> <i class="las la-briefcase"></i> 예약현황 </a>
+                                <li class="list" sec:authorize="isAnonymous()">
+                                    <a href="/reservation/check"> <i class="las la-briefcase"></i> 예약확인 </a>
+                                </li>
+                                <li class="list" sec:authorize="isAuthenticated()">
+                                    <a href="/reservation/details"> <i class="las la-briefcase"></i> 예약확인 </a>
                                 </li>
                                 <li class="list has-children active open show">
                                     <a href="javascript:void(0)"> <i class="las la-user-circle"></i> 프로필 </a>
@@ -94,7 +97,7 @@
                                 <div class="form--message">
                                     <p th:text="${errorMessage}" th:if="${errorMessage}"></p>
                                 </div>
-                                <form th:action="@{/templates/fragments/member/update}" role="form" method="post" th:object="${memberFormDto}">
+                                <form th:action="@{/member/update}" role="form" method="post" th:object="${memberFormDto}">
                                     <div class="dashboard-flex-input">
                                         <div class="dashboard-input mt-4">
                                             <label class="label-title mb-3" th:for="email"> 이메일 </label>
@@ -115,7 +118,7 @@
                                     </div>
                                     <div class="dashboard-flex-input">
                                         <div class="dashboard-input mt-4">
-                                            <labelclass="label-title mb-3" th:for="nickName"> 닉네임 </label>
+                                            <label class="label-title mb-3" th:for="nickName"> 닉네임 </label>
                                             <input type="text" class="form--control" placeholder="닉네임을 입력하세요"
                                                    name="nickName" th:value="*{nickName}">
                                             <p th:if="${#fields.hasErrors('nickName')}" th:errors="*{nickName}"
@@ -127,9 +130,9 @@
                                             <label class="label-title mb-3" th:for="tel"> 전화번호 </label>
                                             <div style="display: flex;">
                                                 <input type="number" id="tel1" th:value="*{tel1}" name="tel1" class="form--control"
-                                                       maxlength="3" required style="flex: 1;">&nbsp;&nbsp;
+                                                       maxlength="3" required style="flex: 1;">-
                                                 <input type="number" id="tel2" th:value="*{tel2}" name="tel2" class="form--control"
-                                                       maxlength="4" required style="flex: 1;">&nbsp;&nbsp;
+                                                       maxlength="4" required style="flex: 1;">-
                                                 <input type="number" id="tel3" th:value="*{tel3}" name="tel3" class="form--control"
                                                        maxlength="4" required style="flex: 1;">
                                                 <script>
@@ -146,6 +149,7 @@
                                                     enforceMaxLength(document.getElementById('tel3'), 4);
                                                 </script>
                                             </div>
+                                            전화번호를 바르게 입력하셔야 예약확인 및 알림전송이 가능합니다
                                         </div>
                                     </div>
                                     <div class="btn-wrapper mt-4">

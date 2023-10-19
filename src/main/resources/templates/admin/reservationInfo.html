@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+    </style>
+    <style>
+
+        td {
+            width: 80%;
+        }
+
+        th {
+            width: 20%;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            margin: 0 10px;
+        }
+    </style>
+</th:block>
+
+<!-- 사용자 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+    <script th:inline="javascript">
+        $(document).ready(function () {
+            var errorMessage = [[${errorMessage}]];
+            if (errorMessage != null) {
+                alert(errorMessage);
+            }
+        });
+    </script>
+
+</th:block>
+
+<div layout:fragment="content">
+
+    <div class="container" style="max-width: 800px; margin: 50px auto 0 auto">
+        <h1>예약상세보기</h1>
+        <p style="margin-top: 15px; color: red; " th:text="${message}" th:if="${message}"></p>
+        <table class="table border-dark">
+            <tr>
+                <th style="width: 30%">예약번호</th>
+                <td style="width: 70%" th:text="${reservationDTO.rvno}"></td>
+            </tr>
+            <tr>
+                <th>예약날짜</th>
+                <td th:text="${reservationDTO.regDate}"></td>
+            </tr>
+            <tr>
+                <th>예약자명</th>
+                <td th:text="${reservationDTO.regName}"></td>
+            </tr>
+            <tr>
+                <th>입금자명</th>
+                <td th:text="${reservationDTO.depositName}"></td>
+            </tr>
+            <tr>
+            <tr>
+                <th>전화번호</th>
+                <td><a th:href="'tel:'+${reservationDTO.tel}" >[[${reservationDTO.tel}]]</a></td>
+            </tr>
+            <tr>
+                <th>예약인원</th>
+                <td>[[${reservationDTO.member}]]명</td>
+            </tr>
+            <tr>
+                <th>입금금액</th>
+                <td>
+                    <form th:action="@{/admin/moneychange}" method="post" id="register">
+                        <input type="hidden" th:value="${reservationDTO.rvno}" name="rvno"/>
+                        <span class="d-flex">
+                                <input class="form-control mr-2" type="number" th:value="${reservationDTO.money}"
+                                       name="money" style="width: 65%">&nbsp;원&nbsp;
+                                <button type="submit" class="btn btn-dark" id="moneyChange"
+                                        style="width: 25%">적용</button>
+                        </span>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <th>지역</th>
+                <td th:text="${reservationDTO.region}"></td>
+            </tr>
+            <tr>
+                <th>예약확정 및 문자발송</th>
+                <td>
+                    <p th:if="${reservationDTO.state}">
+                        예약확정
+                    </p>
+                    <button th:unless="${reservationDTO.state}"
+                            class="btn btn-primary"
+                            th:onclick="'confirmStateChange(true,' + ${reservationDTO.rvno} + ');'">
+                        확정하기
+                    </button>
+                </td>
+            </tr>
+        </table>
+        <div class="button-container" style="margin-top:25px; text-align: center;">
+            <button type="button" class="btn btn-warning" onclick="modifyClick()">예약수정</button>
+            <button type="button" class="btn btn-danger" id="deleteBtn">예약삭제</button>
+            <button onclick="window.location.href='/admin/searchlist'"
+                    class="btn btn-outline-primary" id="goBackBtn">
+                돌아가기
+            </button>
+        </div>
+    </div>
+
+
+    <script th:inline="javascript">
+        $(document).ready(function () {
+            $("#register").on("submit", function (event) {
+                event.preventDefault()
+                $.ajax({
+                    type: "POST",
+                    url: $(this).attr('action'),
+                    data: $(this).serialize(), // 폼 데이터를 직렬화하여 전송합니다.
+                    success: function (response) {
+                        alert(response.success);
+                    },
+                    error: function (jqXHR) {
+                        let responseDTO = JSON.parse(jqXHR.responseText);
+                        $('#message').text(responseDTO.error);
+                    }
+                });
+            });
+        });
+
+
+        $(document).ready(function () {
+            $('#deleteBtn').click(function () {
+                let isConfirmed = window.confirm("정말로 삭제하겠습니까?");
+                if (isConfirmed) {
+                    let rvno = /*[[${reservationDTO.rvno}]]*/ '';
+                    let regDate = /*[[${reservationDTO.regDate}]]*/ '';
+                    let search = /*[[${search}]]*/'';
+                    $.ajax({
+                        type: "POST",
+                        url: "/admin/reservationDelete",
+                        data: {rvno: rvno},
+                        success: function (response) {
+                            alert(response.success);
+                            if (search == true) {
+                                window.location.href = "/admin/searchlist";
+                            } else {
+                                window.location.href = "/admin/reservationlist?regDate=" + regDate;
+                            }
+                        },
+                        error: function (jqXHR) {
+                            let responseDTO = JSON.parse(jqXHR.responseText);
+                            alert(responseDTO.error);
+                        }
+                    });
+                }
+            });
+        });
+
+        function confirmStateChange(isConfirmed, reservationId) {
+            let result = window.confirm("예약상태 확정 및 문자를 보내시겠습니까?");
+            if (result) {
+                $.ajax({
+                    url: '/admin/reservationstate',
+                    type: 'POST',
+                    contentType: 'application/json',  // JSON
+                    data: JSON.stringify({  // JavaScript JSON
+                        state: isConfirmed,
+                        rvno: reservationId
+                    }),
+                    success: function (response) {
+                        alert(response.success);
+                        location.reload(); //
+                    },
+                    error: function (jqXHR) {
+                        let responseDTO = JSON.parse(jqXHR.responseText);
+                        alert(responseDTO.error);
+                    }
+                });
+            }
+        }
+
+        function modifyClick() {
+            let search = /*[[${search}]]*/'';
+            let rvno = /*[[${reservationDTO.rvno}]]*/'';
+            window.location.href = '/admin/reservationModify?search=' + search + '&rvno=' + rvno;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const goBackBtn = document.getElementById("goBackBtn");
+            goBackBtn.addEventListener("click", function () {
+                let regDate =/*[[${reservationDTO.regDate}]]*/ '';
+                let search = /*[[${search}]]*/ '';
+                if (search) {
+                    window.location.href = '/admin/searchlist';
+                } else {
+                    window.location.href = '/admin/reservationlist?regDate=' + regDate;
+                }
+            });
+        });
+
+        document.querySelector('#register').addEventListener('submit', function (e) {
+
+            e.preventDefault();
+
+            // 콤마를 제거하고 숫자로 변환
+            let moneyInput = $("#money");
+            let numberFromMoney = parseInt(moneyInput.val().replace(/,/g, ''), 10);
+
+            // 입력 필드에 변환된 값을 설정
+            moneyInput.val(numberFromMoney);
+
+            e.target.submit();
+        });
+    </script>
+
+</div>
+</html>

@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -26,7 +27,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
 
         String authProvider = userRequest.getClientRegistration().getClientName();
 
-        if ("google".equals(authProvider)) {
+        if ("Google".equals(authProvider)) {
             String email = (String) oAuth2User.getAttributes().get("email");
             Map<String, Object> userInfo = new HashMap<>();
             userInfo.put("email", email);
@@ -45,7 +46,17 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
             return new ApplicationOAuth2User(username, userInfo); // 주의 : 소셜 로그인 자체는 "성공"이 된 걸로 처리를 하고 객체를 들고가는거임.
             // 어쨌든 소셜 로그인의 정보를 리턴함.
 
-        } else {
+        } else if ("Naver".equals(authProvider)) {
+            // JSON으로 들어오니까 "email"의 벨류 값을 빼는것.
+            String username = (String) ((Map<String, Object>) oAuth2User.getAttributes().get("response")).get("email");
+            Map<String, Object> userInfo = new HashMap<>(); // 정보를 MAP형식으로
+            userInfo.put("email", username); // 사용자의 이메일 주소 정보 추가
+            userInfo.putAll(oAuth2User.getAttributes()); // 기존 사용자 정보 추가
+
+            return new ApplicationOAuth2User(username, userInfo); // 주의 : 소셜 로그인 자체는 "성공"이 된 걸로 처리를 하고 객체를 들고가는거임.
+            // 어쨌든 소셜 로그인의 정보를 리턴함.
+
+        }else {
             throw new OAuth2AuthenticationException(new OAuth2Error("unsupported_provider"));
         }
     }

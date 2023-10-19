@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "regName")
+@ToString(exclude = "reservationDate")
 public class Reservation extends BaseTimeEntity {
 
     @Id
@@ -21,8 +21,10 @@ public class Reservation extends BaseTimeEntity {
 
     private LocalDate regDate; // 예약날짜
 
-    @Column(length = 200)
+    @Column(length = 500)
     private String message; //요청사항
+
+    private String region; // 지역
 
     private String tel; // 전화번호
 
@@ -33,12 +35,11 @@ public class Reservation extends BaseTimeEntity {
 
     private String email; // 이메일
 
+    private int money; // 입금금액
+
 
     @Builder.Default
     private boolean state = false; // 예약 상태 (확정 전, 확정 완료)
-
-    @Builder.Default
-    private boolean cancel = false; // 취소 여부 (취소 전, 취소 후)
 
     @ManyToOne(fetch = FetchType.LAZY)
     private ReservationDate reservationDate;

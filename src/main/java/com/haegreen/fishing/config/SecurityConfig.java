@@ -60,8 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests() // 경로 설정 // antMatchers : 일반적인 경로 설정 // mvc : mvc 패턴의 경로 설정 (ex : /board/{id})
                 .antMatchers("/admin","/admin/**").hasRole("ADMIN") // 관리자만 허용
-                .antMatchers("/seller/**").access("hasAnyRole('ADMIN')") // 관리자 또는 판매자만
-                .antMatchers("/product/**", "/","/page/**", "/review/**", "/**/**/**", "/reservation/**",
+                .antMatchers( "/","/page/**", "/review/**", "/**/**/**", "/reservation/**",
                         "/member/**", "/member/login/oauth2/code/**").permitAll() // 모두 허용
                 .mvcMatchers("/css/**", "/js/**", "/img/**", "/imgtest/**").permitAll()
                 .mvcMatchers("/images/**", "/product/**").permitAll()
@@ -76,6 +75,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // csrf 공격 막는 기능 끄기
         http.csrf().disable();
+        
+        // http로 접속하면 https로 강제 리다이렉트 하는 기능
+        http.requiresChannel()
+                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                .requiresSecure();
     }
 
     @Override

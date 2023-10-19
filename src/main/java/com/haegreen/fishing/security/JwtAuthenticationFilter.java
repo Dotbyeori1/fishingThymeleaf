@@ -1,6 +1,9 @@
 package com.haegreen.fishing.security;
 
+import com.haegreen.fishing.entitiy.Member;
+import com.haegreen.fishing.repository.MemberRepository;
 import com.haegreen.fishing.service.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -15,16 +18,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Optional;
 
 @Log4j2
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private TokenProvider tokenProvider; // 토큰 인쇄기 장착!
+    private final TokenProvider tokenProvider; // 토큰 인쇄기 장착!
 
-    @Autowired
-    CustomUserDetailsService customUserDetailsService; // 커스텀한 스프링 시큐리티 로그인 서비스를 장착!
+    private final MemberRepository memberRepository;
+
 
     private String parseBearerToken(HttpServletRequest request) { // 해독기계라고 생각하면 됨
         // Http 요청의 헤더를 파싱해 Bearer 토큰을 리턴한다.
@@ -47,24 +51,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) {
         try {
             // 요청에서 토큰 가져오기
-            String token = parseBearerToken(request); // 해독기계로 해독한 토큰을
-            // log.info("Filter is running...."); // 해독
+            String token = parseBearerToken(request); // 해독기계로 해독한 토큰을 해독
             if (token != null && !token.equalsIgnoreCase("null")) { // 토큰이 진짜인지 감짜인지 판별
                 String userId = tokenProvider.validateAndGetUserId(token); // 토큰을 변환한 결과를 userid로 한다.
                 // customUserDetailsService을 통해 userId의 유효성을 확인 후, CustomUserDetails 객체에 저장한다
-                CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(userId);
-                // 결과가 맞으면 권한 부여 (// userDetail을 통해 id, password, role 부여)
-                AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, userDetails.getPassword(), userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication(authentication);
-                SecurityContextHolder.setContext(securityContext); // SecurityContextHolder에 로그인 정보 담기
+                Optional<Member> memberOpt = memberRepository.findById(userId);
+                if (memberOpt.isPresent()) {
+                    CustomUserDetails customUserDetails = new CustomUserDetails(memberOpt.get());
+
+                    // 결과가 맞으면 권한 부여 (// userDetail을 통해 id, password, role 부여)
+                    AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            customUserDetails, customUserDetails.getPassword(), customUserDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                    securityContext.setAuthentication(authentication);
+                    SecurityContextHolder.setContext(securityContext); // SecurityContextHolder에 로그인 정보 담기
+                } else {
+                    // 사용자를 찾을 수 없는 경우의 처리 로직 (예: 로그 기록, 에러 응답 등)
+                    log.warn("No member found with userId: {}", userId);
+                }
             }
             filterChain.doFilter(request, response); // 필터 적용을 해서 Request -> Response 구조로 만든다.
         } catch (Exception e) {
-            e.printStackTrace();
-            // log.info(e);
+            //e.printStackTrace();
+            log.info(e);
         }
     }
 }

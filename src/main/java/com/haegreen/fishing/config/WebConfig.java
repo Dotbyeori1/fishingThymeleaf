@@ -1,7 +1,15 @@
 package com.haegreen.fishing.config;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.connector.Connector;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -15,8 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/imgtest/**")
-                .addResourceLocations("file:./imgtest/");
+        registry.addResourceHandler("/haegreen/**")
+                .addResourceLocations("file:./haegreen/");
     }
 
     @Override
@@ -24,4 +32,5 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addConverter(String.class, LocalDate.class,
                 source -> LocalDate.parse(source, DateTimeFormatter.ISO_DATE));
     }
+
 }

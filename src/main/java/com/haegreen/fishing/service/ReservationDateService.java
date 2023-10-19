@@ -1,49 +1,41 @@
 package com.haegreen.fishing.service;
 
+import com.haegreen.fishing.dto.ReservationDateDTO;
 import com.haegreen.fishing.entitiy.ReservationDate;
-import com.haegreen.fishing.repository.ReservationDateRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.time.LocalDate;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
 
-@Service
-public class ReservationDateService {
+public interface ReservationDateService {
 
-    @Autowired
-    private ReservationDateRepository reservationDateRepository;
+    List<ReservationDateDTO> getAllReservationDates(LocalDate startDate, LocalDate endDate) ;
+    public ReservationDateDTO getReservationDate(LocalDate regDate);
+    public boolean modifyDateAvailable(Long rdate, ReservationDateDTO reservationDateDTO);
+    public boolean modifySort(Long rdate, ReservationDateDTO reservationDateDTO);
+    public boolean modifySorts(LocalDate startDate, LocalDate endDate, String sort, int extraMembers, int fishingMoney);
 
-    @PostConstruct
-    public void init() {
-        // 애플리케이션이 시작된 후 1분 후에 처음으로 generateReservationDates() 메소드를 호출합니다.
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                generateReservationDates();
-            }
-        }, 1000 * 60);
+    default ReservationDate DtoToEntity(ReservationDateDTO dto) {
+        ReservationDate reservationDate = new ReservationDate();
+        reservationDate.setRdate(dto.getRdate());
+        reservationDate.setRegDate(dto.getRegDate());
+        reservationDate.setMessage(dto.getMessage());
+        reservationDate.setAvailable(dto.isAvailable());
+        reservationDate.setFishingSort(dto.getFishingSort());
+        reservationDate.setExtrasMembers(dto.getExtrasMembers());
+        reservationDate.setFishingMoney(dto.getFishingMoney());
+        return reservationDate;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행됩니다.
-    public void generateReservationDates() {
-        LocalDate today = LocalDate.now();
-        LocalDate oneYearLater = today.plusYears(1);
-
-        for (LocalDate regDate = today; !regDate.isAfter(oneYearLater); regDate = regDate.plusDays(1)) {
-            Optional<ReservationDate> optional = reservationDateRepository.findByRegDate(regDate);
-
-            if (!optional.isPresent()) { // 해당 날짜의 ReservationDate가 없으면 새로 만듭니다.
-                ReservationDate reservationDate = new ReservationDate();
-                reservationDate.setRegDate(regDate);
-                reservationDate.setAvailable(true);
-
-                reservationDateRepository.save(reservationDate);
-            }
-        }
+    default ReservationDateDTO entityToDto(ReservationDate reservationDate) {
+        ReservationDateDTO dto = new ReservationDateDTO();
+        dto.setRdate(reservationDate.getRdate());
+        dto.setRegDate(reservationDate.getRegDate());
+        dto.setMessage(reservationDate.getMessage());
+        dto.setAvailable(reservationDate.isAvailable());
+        dto.setFishingSort(reservationDate.getFishingSort());
+        dto.setExtrasMembers(reservationDate.getExtrasMembers());
+        dto.setFishingMoney(reservationDate.getFishingMoney());
+        return dto;
     }
+
 }

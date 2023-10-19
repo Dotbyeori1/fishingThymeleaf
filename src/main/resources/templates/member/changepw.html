@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{fragments/layout1}">
 
 <!-- 사용자 CSS 추가 -->
@@ -44,8 +45,11 @@
                                 <li class="list">
                                     <a href="/member/point"> <i class="las la-briefcase"></i> 포인트 </a>
                                 </li>
-                                <li class="list">
-                                    <a href="/reservation/list"> <i class="las la-briefcase"></i> 예약현황 </a>
+                                <li class="list" sec:authorize="isAnonymous()">
+                                    <a href="/reservation/details"> <i class="las la-briefcase"></i> 예약확인 </a>
+                                </li>
+                                <li class="list" sec:authorize="isAuthenticated()">
+                                    <a href="/reservation/check"> <i class="las la-briefcase"></i> 예약확인 </a>
                                 </li>
                                 <li class="list has-children active open show">
                                     <a href="/member/memberinfo"> <i class="las la-user-circle"></i> 프로필 </a>
@@ -98,13 +102,16 @@
     <script type="text/javascript">
         $(document).ready(function () {
             $('#changepw').on('submit', function (e) {
-                var currentPassword = $('#currentPassword').val();
-                var password = $('#password').val();
-                var passwordConfirm = $('#passwordConfirm').val();
+                let currentPassword = $('#currentPassword').val();
+                let password = $('#password').val();
+                let passwordConfirm = $('#passwordConfirm').val();
 
 
                 // 비밀번호 비교
-                if (password !== passwordConfirm) {
+                if(password.length <= 5){
+                    $('#passwordError').text('비밀번호는 6자리 이상으로 해주세요.');
+                    e.preventDefault(); // 폼 제출을 중지합니다.
+                }else if (password !== passwordConfirm) {
                     $('#passwordError').text('비밀번호가 일치하지 않습니다.');
                     e.preventDefault(); // 폼 제출을 중지합니다.
                     return;

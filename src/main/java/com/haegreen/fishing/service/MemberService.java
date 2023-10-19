@@ -19,8 +19,7 @@ import javax.transaction.Transactional;
 @RequiredArgsConstructor
 public class MemberService {
 
-    @Autowired
-    MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -63,15 +62,6 @@ public class MemberService {
         member.setPassword(passwordEncoder.encode(memberFormDto.getPassword()));
         memberRepository.save(member);
 
-        return member;
-    }
-
-    public Member changeSeller(MemberFormDto memberFormDto){
-        Member member = memberRepository.findByEmail(memberFormDto.getEmail());
-        member.setRole(memberFormDto.getRole());
-        member.setName(memberFormDto.getName());
-        member.setTel(memberFormDto.getTel());
-        memberRepository.save(member);
         return member;
     }
 

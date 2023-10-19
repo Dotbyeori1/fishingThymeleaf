@@ -17,7 +17,7 @@
 
     <script th:inline="javascript">
         $(document).ready(function () {
-            var errorMessage = [[${errorMessage}]];
+            let errorMessage = [[${errorMessage}]];
             if (errorMessage != null) {
                 alert(errorMessage);
             }
@@ -28,67 +28,108 @@
 
 <div layout:fragment="content">
 
-    <div class="container">
+    <div class="container mab-50 mat-50">
         <div class="login-wrapper-flex">
             <div class="login-wrapper-contents login-padding">
+                <div style="margin: 0 auto">
+                    <h2 style="text-align: center">예약하기</h2>
+                </div>
                 <form class="login-wrapper-form custom-form padding-top-20"
                       th:action="@{/reservation/register}" id="register" method="post">
-<!--                    <p class="text-danger" th:text="${errorMessage}" th:if="${errorMessage}"></p>-->
-                    낚시 예약
+                    <!--<p class="text-danger" th:text="${errorMessage}" th:if="${errorMessage}"></p>-->
                     <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="regDate">예약날짜</label>
-                        <input type="text" name="regDate"  th:value="${param.regDate}" class="form--control" readonly>
+                        <input type="text" id="regDate" name="regDate" th:value="${param.regDate}" class="form--control"
+                               readonly>
                     </div>
                     <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="member">예약인원</label>
                         <select class="form-select" aria-label="Default select example" id="member" name="member">
-                            <option th:each="i : ${#numbers.sequence(1, extras)}" th:value="${i}" th:text="${i}"></option>
+                            <option th:each="i : ${#numbers.sequence(1, extras)}" th:value="${i}"
+                                    th:text="${i}+'명'"></option>
                         </select>
+                    </div>
+                    <div class="single-input mt-4">
+                        <label class="label-title mb-3">입금금액</label>
+                        <input type="text" id="money" class="form--control" readonly>
                     </div>
                     <div th:if="${memberFormDto.email}">
                         <input type="hidden" name="email" th:value="${memberFormDto.email}">
                     </div>
-                    <div th:unless="${memberFormDto.email}" class="single-input mt-4">
-                        <label class="label-title mb-3" th:for="email"> 이메일 </label>
-                        <input type="text" name="email" th:value="${memberFormDto.email}" class="form--control" placeholder="이메일을 입력해주세요" required>
-                    </div>
                     <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="regName">예약자명</label>
-                        <input type="text" name="regName" th:value="${memberFormDto.name}" class="form--control" placeholder="예약자명을 입력해주세요" required>
+                        <input type="text" name="regName" th:value="${memberFormDto.name}" class="form--control"
+                               placeholder="예약자명을 입력해주세요" required>
                     </div>
                     <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="name">입금자명</label>
                         <input type="text" name="depositName" class="form--control" placeholder="입금자명을 입력해주세요" required>
                     </div>
                     <div class="single-input mt-4">
+                        <label class="label-title mb-3" th:for="region">지역</label>
+                        <input type="text" name="region" class="form--control" placeholder="예시) 거제, 부산, 창원, 대전"
+                               required>
+                    </div>
+                    <div class="single-input mt-4">
                         <label class="label-title mb-3" th:for="tel">전화번호</label>
                         <div style="display: flex;">
-                            <input type="number" id="tel1" th:value="${memberFormDto.tel1}" name="tel1" class="form--control" maxlength="3" required style="flex: 1;">&nbsp;&nbsp;
-                            <input type="number" id="tel2" th:value="${memberFormDto.tel2}" name="tel2" class="form--control" maxlength="4" required style="flex: 1;">&nbsp;&nbsp;
-                            <input type="number" id="tel3" th:value="${memberFormDto.tel3}" name="tel3" class="form--control" maxlength="4" required style="flex: 1;">
+                            <input type="number" id="tel1" th:value="${memberFormDto.tel1}" name="tel1"
+                                   class="form--control" maxlength="3" required style="flex: 1;">-
+                            <input type="number" id="tel2" th:value="${memberFormDto.tel2}" name="tel2"
+                                   class="form--control" maxlength="4" required style="flex: 1;">-
+                            <input type="number" id="tel3" th:value="${memberFormDto.tel3}" name="tel3"
+                                   class="form--control" maxlength="4" required style="flex: 1;">
                         </div>
-                        <script>
-                            function enforceMaxLength(element, maxLength) {
-                                element.oninput = function () {
-                                    if (this.value.length > maxLength) {
-                                        this.value = this.value.slice(0,maxLength);
-                                    }
-                                }
-                            }
-
-                            enforceMaxLength(document.getElementById('tel1'), 3);
-                            enforceMaxLength(document.getElementById('tel2'), 4);
-                            enforceMaxLength(document.getElementById('tel3'), 4);
-                        </script>
+                        전화번호를 바르게 입력하셔야 예약확인 및 알림전송이 가능합니다
                     </div>
                     <button class="submit-btn w-100 mt-4" type="submit">예약하기</button>
-                    <button class="btn-outline-primary w-100 mt-4" type="button"
-                            onclick="window.location.href='/reservation/list'">돌아가기</button>
+                    <button th:if="${mainYN}" class="btn btn-outline-primary w-100 mt-4" type="button"
+                            onclick="window.location.href='/reservation/list'">돌아가기
+                    </button>
+                    <button th:unless="${mainYN}" class="btn btn-outline-primary w-100 mt-4" type="button"
+                            onclick="window.location.href='/main'">돌아가기
+                    </button>
                 </form>
+
+                <script th:inline="javascript">
+                    function enforceMaxLength(element, maxLength) {
+                        element.oninput = function () {
+                            if (this.value.length > maxLength) {
+                                this.value = this.value.slice(0, maxLength);
+                            }
+                        }
+                    }
+
+                    enforceMaxLength(document.getElementById('tel1'), 3);
+                    enforceMaxLength(document.getElementById('tel2'), 4);
+                    enforceMaxLength(document.getElementById('tel3'), 4);
+
+                    // 총 비용 계산 함수
+                    function calculateCost() {
+                        const member = document.getElementById('member').value;
+                        const money = document.getElementById('money');
+                        const fishingMoney = /*[[${fishingMoney}]]*/ [] || 0;
+
+                        let totalCost = member * fishingMoney;
+
+                        // 숫자를 콤마로 구분된 형식의 문자열로 변환
+                        const formattedTotalCost = totalCost.toLocaleString('en-US');
+
+                        money.value = formattedTotalCost + '원';
+                    }
+
+                    // "member" select 태그에 이벤트 리스너 추가
+                    document.getElementById('member').addEventListener('change', calculateCost);
+
+                    // 페이지 로드 시 총 비용 초기 계산
+                    window.addEventListener('load', function () {
+                        calculateCost();
+                    });
+                </script>
+
             </div>
         </div>
     </div>
-
 
 </div>
 
