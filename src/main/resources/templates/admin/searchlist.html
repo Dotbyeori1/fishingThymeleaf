@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<!-- CSS -->
+<th:block layout:fragment="css">
+
+</th:block>
+
+<div layout:fragment="content">
+
+    <div class="container" style="margin: 50px auto; padding: 0 30px;">
+        <h1>예약현황(최근별)</h1>
+        <p>예약번호를 누르시면 해당번호의 예약정보 확인·수정·삭제가 가능합니다.</p>
+        <p>검색을 통해 원하는 결과를 얻을 수 있습니다.</p>
+        <div class="col-md-12" style="margin: 25px 0;">
+            <form action="/admin/searchlist" method="get" id="searchForm">
+                <input type="hidden" name="page" value="1">
+                <table class="table border">
+                    <thead>
+                    <th class="table-light" colspan="4" style="text-align: center">
+                        검색하기
+                    </th>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td style="width: 15%">예약자명</td>
+                        <td style="width: 35%"><input type="text" class="form-control" name="regName"
+                                                      th:value="${reservationDTO.regName}"/>&nbsp;
+                        </td>
+                        <td style="width: 15%">입금자명</td>
+                        <td style="width: 35%"><input type="text" class="form-control" name="depositName"
+                                                      th:value="${reservationDTO.depositName}"/>&nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 15%">전화번호</td>
+                        <td class="border-right" style="width: 35%"><input type="text" class="form-control" name="tel"
+                                                                           th:value="${reservationDTO.tel}"/>&nbsp;
+                        </td>
+                        <td style="width: 15%">예약번호</td>
+                        <td style="width: 35%"><input type="text" class="form-control" name="rvno"
+                                                      th:value="${reservationDTO.rvno}"/>&nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 15%">예약날짜</td>
+                        <td style="width: 85%" colspan="3"><input type="date" class="form-control" name="regDate"
+                                                                  th:value="${reservationDTO.regDate}"/>&nbsp;
+                        </td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="4" style="text-align: center">
+                            <button class="btn btn-primary" type="button" id="search">검색</button>
+                            <button class="btn btn-outline-primary" type="button" id="clear">초기화</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+
+        <div th:if="${reservationDTO.regDate}">
+            <p>남은인원 : [[${extras}]]명, 확정된인원 : [[${confirmMember}]]명</p>
+        </div>
+
+        <table class="table" style="margin-top: 10px;">
+            <thead>
+            <tr class="table-light">
+                <th>예약번호</th>
+                <th th:unless="${reservationDTO.regDate}">예약날짜</th>
+                <th>예약자명</th>
+                <th>입금자명</th>
+                <th>전화번호</th>
+                <th>인원</th>
+                <th>입금금액</th>
+                <th>예약확정</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="dto : ${result.dtoList}">
+                <td><a th:href="@{/admin/reservationInfo(rvno=${dto.rvno}, search=true)}">[[${dto.rvno}]]</a></td>
+                <td th:unless="${reservationDTO.regDate}" th:text="${dto.regDate}"></td>
+                <td th:text="${dto.regName}"></td>
+                <td th:text="${dto.depositName}"></td>
+                <td><a th:href="'tel:'+${dto.tel}" >[[${dto.tel}]]</a></td>
+                <td>[[${dto.member}]]</td>
+                <td>[[${dto.formatMoney}]]</td>
+                <td>
+                    <p th:if="${dto.state}">
+                        확정완료
+                    </p>
+                    <button th:unless="${dto.state}"
+                            class="btn btn-primary"
+                            th:onclick="'confirmStateChange(true,' + ${dto.rvno} + ');'">
+                        확정하기
+                    </button>
+                </td>
+            </tr>
+            <!-- 만약 dtoList가 비어있을 때 메시지를 표시 -->
+            <tr th:if="${#lists.isEmpty(result.dtoList)}">
+                <td colspan="9" style="text-align: center">
+                    조회 된 결과가 없습니다.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <nav>
+            <ul class="pagination pagination-dark justify-content-center">
+                <!-- 'Previous' 버튼 수정 -->
+                <li th:class="${result.prev} ? 'page-item' : 'page-item disabled'">
+                    <a class="page-link"
+                       th:href="@{/admin/searchlist(page=${result.page - 1}, regName=${reservationDTO.regName}, depositName=${reservationDTO.depositName},
+                            tel=${reservationDTO.tel}, regDate=${reservationDTO.regDate})}">
+                        이전
+                    </a>
+                </li>
+
+                <!-- 페이지네이션 시작 페이지 및 끝 페이지 계산 -->
+                <th:block th:with="startPage=${result.page - 5}, endPage=${result.page + 5}">
+
+                    <!-- 시작 페이지부터 끝 페이지까지 페이지 목록 생성 -->
+                    <li th:each="page: ${#numbers.sequence(1, result.totalPage)}"
+                        th:if="${page >= startPage and page <= endPage}"
+                        th:class="${result.page == page} ? 'page-item active' : 'page-item'">
+                        <a class="page-link"
+                           th:href="@{/admin/searchlist(page=${page}, regName=${reservationDTO.regName}, depositName=${reservationDTO.depositName},
+                            tel=${reservationDTO.tel}, regDate=${reservationDTO.regDate})}">
+                            [[${page}]]
+                        </a>
+                    </li>
+
+                </th:block>
+
+                <!-- 'Next' 버튼 수정 -->
+                <li th:class="${result.next} ? 'page-item' : 'page-item disabled'">
+                    <a class="page-link"
+                       th:href="@{/admin/searchlist(page=${result.page + 1}, regName=${reservationDTO.regName}, depositName=${reservationDTO.depositName},
+                            tel=${reservationDTO.tel}, regDate=${reservationDTO.regDate})}">
+                        다음
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+
+    <!-- Dashboard area end -->
+
+    <script th:inline="javascript">
+
+        const msg = null;
+
+        const searchForm = $("#searchForm");
+
+        $('.btn-primary').click(function () {
+            searchForm.submit();
+        });
+
+        $('.btn-outline-primary').click(function () {
+            searchForm.empty().submit();
+        });
+
+        function confirmStateChange(isConfirmed, reservationId) {
+            let result = window.confirm("예약상태 확정 및 문자를 보내시겠습니까?");
+            if (result) {
+                // '예'를 선택했을 때의 로직
+                // 예를 들어, AJAX 호출을 사용해 서버에 변경 요청을 보낼 수 있습니다.
+                // AJAX 예시:
+                $.ajax({
+                    url: '/admin/reservationstate',
+                    type: 'POST',
+                    contentType: 'application/json',  // JSON 형식 명시
+                    data: JSON.stringify({  // JavaScript 객체를 JSON 문자열로 변환
+                        state: isConfirmed,
+                        rvno: reservationId
+                    }),
+                    success: function (response) {
+                        alert(response.success);
+                        location.reload(); // 페이지 새로고침
+                    },
+                    error: function (jqXHR) {
+                        let responseDTO = JSON.parse(jqXHR.responseText);
+                        alert(responseDTO.error);
+                    }
+                });
+            }
+        }
+
+        $('form#searchForm').on('keypress', function (e) {
+            if (e.which === 13) { // Enter 키를 감지
+                e.preventDefault(); // 기본 이벤트 (폼 제출)를 중단
+                $('#search').trigger('click'); // 로그인 버튼 클릭 이벤트를 트리거
+            }
+        });
+
+    </script>
+
+</div>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{fragmentsAdmin/layout}">
+
+<div layout:fragment="content">
+    <div class="container" style="margin: 50px auto;">
+        <h1>날짜별상태관리</h1>
+        <p>날짜별로 낚시의 종류와 인원 금액을 설정할 수 있습니다.</p>
+
+        <form id="form1" style="margin-top: 50px;">
+            <h3>특정 날짜 변경</h3>
+            <p>해당 날짜의 상태를 변경 할 수 있습니다.</p>
+            <input type="hidden" name="rdate" id="rdate" th:value="${reservationDateDTO.rdate}">
+            <table class="table table-bordered border-dark">
+                <thead>
+                <tr>
+                    <th colspan="2" class="table-dark">
+                        특정 날짜 변경
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th style="width: 35%;">날짜</th>
+                    <td style="width: 65%;">
+                        <input type="date" class="form-control" name="regDate"
+                               th:value="${reservationDateDTO.regDate}" required>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 종류 설정</th>
+                    <td style="width: 65%;">
+                        <input class="form-control" type="text" name="fishingSort"
+                               th:value="${reservationDateDTO.fishingSort}">
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 인원 설정</th>
+                    <td style="width: 65%;">
+                        <span class="d-flex">
+                                <input class="form-control" type="number" name="extrasMembers"
+                                       th:value="${reservationDateDTO.extrasMembers}">&nbsp;명
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 금액 설정</th>
+                    <td style="width: 65%;">
+                        <span class="d-flex">
+                                <input class="form-control" type="number" name="fishingMoney"
+                                       th:value="${reservationDateDTO.fishingMoney}">&nbsp;원
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button class="btn btn-dark w-100 mt-4" type="submit">적용하기</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+
+        <form style="margin-top: 50px;">
+            <h3>기간 내 변경</h3>
+            <p>기간 내의 상태를 변경할 수 있습니다. <br/>
+                <font color="#dc143c">오늘부터 4개월 이내 만 설정이 가능합니다.</font></p>
+            <table class="table table-bordered border-dark">
+                <thead>
+                <tr>
+                    <th colspan="2" class="table-dark">기간 내 변경</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th style="width: 35%;">시작 날짜</th>
+                    <td style="width: 65%;">
+                        <input type="date" class="form-control" id="startDate" name="startDate" th:value="${startDate}"
+                               required>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">종료 날짜</th>
+                    <td style="width: 65%;">
+                        <input type="date" class="form-control" id="endDate" name="endDate" th:value="${endDate}"
+                               required>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 종류 설정</th>
+                    <td style="width: 65%;">
+                        <input class="form-control" type="text" name="fishingSort2" required>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 인원 설정</th>
+                    <td style="width: 65%;">
+                        <span class="d-flex">
+                            <input class="form-control" type="number" name="extrasMembers2" required>&nbsp;명
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 35%;">낚시 금액 설정</th>
+                    <td style="width: 65%;">
+                        <span class="d-flex">
+                            <input class="form-control" type="number" name="fishingMoney2" required>&nbsp;원
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button class="btn btn-dark w-100 mt-4" type="button" id="applyButton">적용하기</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+
+        <script>
+            $(document).ready(function () {
+                $("input[name='regDate']").on('change', function () {
+                    let regDate = $(this).val();
+
+                    $.ajax({
+                        url: '/admin/modifysort2',
+                        method: 'GET',
+                        data: {
+                            regDate: regDate
+                        },
+                        success: function (response) {
+                            $('#form1 input[name="fishingSort"]').val(response.fishingSort);
+                            $('#form1 input[name="extrasMembers"]').val(response.extrasMembers);
+                            $('#form1 input[name="fishingMoney"]').val(response.fishingMoney);
+                            $('#form1 input[name="rdate"]').val(response.rdate);
+                        },
+                        error: function (jqXHR) {
+                            let responseDTO = JSON.parse(jqXHR.responseText);
+                            alert(responseDTO.error);
+                        }
+                    });
+                });
+
+                $("#form1").on("submit", function (event) {
+                    event.preventDefault();
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/admin/modifysort2",
+                        data: $(this).serialize(), // 폼 데이터를 직렬화하여 전송합니다.
+                        success: function (response) {
+                            alert(response.success);
+                        },
+                        error: function (jqXHR) {
+                            let responseDTO = JSON.parse(jqXHR.responseText);
+                            alert(responseDTO.error);
+                        }
+                    });
+                });
+
+
+                $('#applyButton').click(function () {
+                    let startDate = new Date($("input[name='startDate']").val());
+                    let endDate = new Date($("input[name='endDate']").val());
+                    let extrasMembers = $("input[name='extrasMembers2']").val();
+                    let fishingSort = $("input[name='fishingSort2']").val();
+                    let fishingMoney = $("input[name='fishingMoney2']").val();
+
+                    if (startDate > endDate) {
+                        alert("시작날짜는 종료날짜보다 이전이어야 합니다.");
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/admin/modifysort',
+                        method: 'POST',
+                        data: {
+                            startDate: $("input[name='startDate']").val(),
+                            endDate: $("input[name='endDate']").val(),
+                            fishingSort: fishingSort,
+                            extrasMembers: extrasMembers,
+                            fishingMoney: fishingMoney
+                        },
+                        success: function (response) {
+                            let isConfirmed = window.confirm(response.success);
+                            if (isConfirmed) {
+                                window.location.href = "/reservation/list";
+                            }
+                        },
+                        error: function (jqXHR) {
+                            let responseDTO = JSON.parse(jqXHR.responseText);
+                            alert(responseDTO.error);
+                        }
+                    });
+                });
+            });
+        </script>
+
+    </div>
+
+</div>
+</html>
