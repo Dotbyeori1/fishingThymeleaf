@@ -9,11 +9,12 @@ import javax.persistence.*;
 @Entity
 @Table(name = "NoticeboardImg")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "noticeBoard")
-public class NoticeBoardImg {
+public class NoticeBoardImg  {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long nino;
@@ -23,6 +24,10 @@ public class NoticeBoardImg {
     private NoticeBoard noticeBoard;
 
     @Column(length = 200)
-    private String Imgfile;
+    private String uuidfileName;
+
+    @Column(length = 200)
+    private String realfileName;
+
 
 }

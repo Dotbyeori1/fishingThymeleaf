@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import com.haegreen.fishing.entitiy.ReservationDate;
 import org.springframework.security.core.Authentication;
 
 public interface ReservationService {

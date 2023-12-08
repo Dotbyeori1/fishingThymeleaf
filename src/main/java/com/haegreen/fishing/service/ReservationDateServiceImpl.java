@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,7 @@ public class ReservationDateServiceImpl implements ReservationDateService {
         for (LocalDate regDate = today; !regDate.isAfter(forMonthLater); regDate = regDate.plusDays(1)) {
             Optional<ReservationDate> optional = reservationDateRepository.findByRegDate(regDate);
 
-            if (!optional.isPresent()) { // 해당 날짜의 ReservationDate가 없으면 새로 만듭니다.
+            if (optional.isEmpty()) { // 해당 날짜의 ReservationDate가 없으면 새로 만듭니다.
                 ReservationDate reservationDate = new ReservationDate();
                 reservationDate.setRegDate(regDate);
                 reservationDate.setAvailable(true);
@@ -60,7 +61,6 @@ public class ReservationDateServiceImpl implements ReservationDateService {
         if (todayReservationDate.isPresent()) {
             ReservationDate reservationDate = todayReservationDate.get();
             reservationDate.setAvailable(false);
-            reservationDate.setMessage("");
             reservationDateRepository.save(reservationDate);
         }
     }
@@ -87,6 +87,11 @@ public class ReservationDateServiceImpl implements ReservationDateService {
             ReservationDate reservationDate = optionalReservationDate.get();
             reservationDate.setAvailable(reservationDateDTO.isAvailable());
             reservationDate.setMessage(reservationDateDTO.getMessage());
+            if(!reservationDateDTO.isAvailable()) { // 이용불가 -> 수정 // 이용가능 -> 수정안함 으로 되돌리기
+                reservationDate.setDateModify(true);
+            }else {
+                reservationDate.setDateModify(false);
+            }
             reservationDateRepository.save(reservationDate);
             return true;
         } else {
@@ -118,6 +123,20 @@ public class ReservationDateServiceImpl implements ReservationDateService {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public boolean isReservable(ReservationDate reservationDate) {
+        String fishingSort = reservationDate.getFishingSort();
+        if (fishingSort != null && ("갈치".contains(fishingSort)) && LocalTime.now().isBefore(LocalTime.of(14, 0))) {
+            reservationDate.setAvailable(true);
+            return true;
+        }
+        if(reservationDate.isDateModify()){
+            reservationDate.setAvailable(false);
+            return false;
+        }
+        return reservationDate.isAvailable();
     }
 
     @Transactional

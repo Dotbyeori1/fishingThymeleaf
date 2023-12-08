@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{fragments/layout1}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content">
+
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tinymce/tinymce-jquery@2/dist/tinymce-jquery.min.js"></script>
+
+    <div class="dashboard-area section-bg-2 pat-100 pab-100">
+        <div class="container">
+            <div class="dashboard-contents-wrapper">
+                <div class="dashboard-right-contents mt-4 mt-lg-0">
+                    <div class="dashboard-reservation">
+                        <div class="single-reservation bg-white base-padding">
+                            <form action="/noticeboard/modify" method="post" enctype="multipart/form-data">
+
+                                <!--페이지 번호  -->
+                                <input type="hidden" name="page" th:value="${requestDTO.page}">
+                                <input type="hidden" name="type" th:value="${requestDTO.type}">
+                                <input type="hidden" name="keyword" th:value="${requestDTO.keyword}">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>글번호</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="nbno" th:value="${dto.nbno}"
+                                                   readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>제목</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="title" th:value="${dto.title}"
+                                                   placeholder="제목을 입력하세요" required>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>내용</th>
+                                        <td>
+                                            <textarea id="tiny" name="content" th:utext="${dto.content}"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>작성자</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="writer"
+                                                   th:value="${dto.writerName}"
+                                                   readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>등록일</th>
+                                        <td>
+                                            <input type="text" class="form-control"
+                                                   th:value="${#temporals.format(dto.regTime, 'yyyy/MM/dd HH:mm:ss')}"
+                                                   readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>수정일</th>
+                                        <td>
+                                            <input type="text" class="form-control"
+                                                   th:value="${#temporals.format(dto.modTime, 'yyyy/MM/dd HH:mm:ss')}"
+                                                   readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>업로드</th>
+                                        <td>
+                                            <div th:if="${noticeBoardImgs}" th:each="img : ${noticeBoardImgs}">
+                                                <div class="col-12 col-md-6">
+                                                    <label class="form-label">이미지</label>
+                                                    <input type="hidden" name="inos" th:value="${img.ino}"/>
+                                                    <input class="form-control" type="file" name="images">
+                                                    <img th:src="'/haegreen/' + ${img.uuidfileName}"
+                                                         alt="Uploaded Image Preview" width="100px" height="100px"/>
+                                                    <input type="checkbox" name="deleteImages" th:value="${img.ino}"/>
+                                                    삭제
+                                                </div>
+                                            </div>
+
+                                            <div th:unless="${noticeBoardImgs != null and not #lists.isEmpty(noticeBoardImgs)}">
+                                                <div class="col-12 col-md-6">
+                                                    <label class="form-label">이미지</label>
+                                                    <input class="form-control" type="file" name="images">
+                                                </div>
+                                                <div class="col-12 col-md-6">
+                                                    <label class="form-label">이미지</label>
+                                                    <input class="form-control" type="file" name="images">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+
+                            <div class="mat-25">
+                                <button type="button" class="btn btn-info listBtn">목록으로</button>
+
+                                <button type="button" class="btn btn-primary modifyBtn">수정하기</button>
+
+                                <button type="button" class="btn btn-danger removeBtn">삭제하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Dashboard area end -->
+
+    <script th:inline="javascript">
+
+        tinymce.init({
+            selector: '#tiny',
+            height: 500,
+            menubar: false,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | bold italic forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | removeformat | help'
+        });
+
+
+        let actionForm = $("form"); //form 태그 객체
+
+        $(".removeBtn").click(function () { //삭제 버튼 작동 함수
+
+            if (!confirm("삭제하시겠습니까??")) {
+                return;
+            }
+
+            actionForm
+                .attr("action", "/noticeboard/remove")
+                .attr("method", "post");
+
+            actionForm.submit();
+
+        });
+
+        $(".modifyBtn").click(function () { //수정 버튼 작동 함수
+
+            if (!confirm("수정하시겠습니까?")) {
+                return;
+            }
+
+            actionForm
+                .attr("action", "/noticeboard/modify")
+                .attr("method", "post")
+                .submit();
+        });
+
+        $(".listBtn").click(function () { //목록 버튼 작동 함수
+            let nbno = $("input[name='nbno']");
+            let page = $("input[name='page']");
+            let type = $("input[name='type']");
+            let keyword = $("input[name='keyword']"); //페이지와 타입, 검색내용을 불러옴
+
+            actionForm.empty(); //form 태그의 모든 내용을 지우고
+
+            actionForm.append(nbno);
+            actionForm.append(page);
+            actionForm.append(type);
+            actionForm.append(keyword);
+            //페이지,타입,검색내용을 보냄
+
+            actionForm
+                .attr("action", "/noticeboard/read")
+                .attr("method", "get");
+
+            actionForm.submit();
+
+        })
+
+    </script>
+</div>
+</html>

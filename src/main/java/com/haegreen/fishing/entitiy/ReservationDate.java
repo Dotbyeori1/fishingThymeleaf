@@ -31,6 +31,9 @@ public class ReservationDate {
 
     private int fishingMoney; // 금액
 
+    @Builder.Default
+    private boolean dateModify = false; // 날짜 수정 여부
+
     // 예약 가능 여부. true면 예약 가능, false면 판매 취소(예약 불가).
     @Builder.Default
     private boolean available = true;

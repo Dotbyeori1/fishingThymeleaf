@@ -78,9 +78,11 @@
             $('#login').click(function () {
                 let email = $('#email').val();
                 let password = $('#password').val();
+                let check15 = $('#check15').is(':checked');
                 let formData = {
                     email: email,
-                    password: password
+                    password: password,
+                    check15: check15,
                 };
 
                 if (!email) {

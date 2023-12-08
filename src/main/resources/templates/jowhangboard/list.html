@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{fragments/layout1}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .pagination-dark .page-link {
+            color: #fff;
+            background-color: #343a40;
+            border-color: #343a40;
+        }
+
+        .pagination-dark .page-item.active .page-link {
+            z-index: 1;
+            color: #343a40;
+            background-color: #fff;
+            border-color: #343a40;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content">
+
+    <!-- Shop area starts -->
+    <section class="blog-area pat-100 pab-100">
+        <div class="container">
+            <div class="row justify-content-between">
+                <div class="col-md-5">
+                    <a th:href="@{/jowhangboard/register}">
+                        <button type="button" class="btn btn-primary"
+                                sec:authorize="hasAnyAuthority('ROLE_ADMIN')">글쓰기</button>
+                    </a>
+                </div>
+                <div class="col-md-4 col-lg-5">
+                    <form action="/jowhangboard/list" method="get" id="searchForm">
+                        <div class="input-group">
+                            <input type="hidden" name="page" value="1">
+                            <div class="input-group-prepend">
+                                <select class="form-select" id="exampleSelect1" name="type">
+                                    <option value="t" th:selected="${pageRequestDTO.type =='t'}">제목
+                                    </option>
+                                    <option value="c" th:selected="${pageRequestDTO.type =='c'}">내용
+                                    </option>
+                                    <option value="tc" th:selected="${pageRequestDTO.type =='tc'}">제목 +
+                                        내용
+                                    </option>
+                                </select>
+                            </div>
+                            <input class="form-control" name="keyword"
+                                   th:value="${pageRequestDTO.keyword}" style="width: 20%"/>&nbsp;
+                            <div class="input-group-append" id="button-addon4">
+                                <button class="btn btn-primary" type="button" id="search">검색</button>
+                                <button class="btn btn-outline-primary" type="button" id="clear">초기화
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row gy-5 mat-25">
+                <th:block th:each="dto : ${result.dtoList}">
+                <div class="col-xxl-4 col-lg-4 col-md-6">
+                    <div class="single-blog">
+                        <div class="single-blog-thumbs">
+                            <a th:href="@{/jowhangboard/read(jbno = ${dto.jbno}, page= ${result.page},
+                             type=${pageRequestDTO.type}, keyword = ${pageRequestDTO.keyword})}">
+                                <div>
+                                    <img class="lazyloads" th:src="@{/jowhangtitle.jpg}" th:alt="${dto.title}" />
+                                </div>
+                            </a>
+                            <div class="single-blog-thumbs-date">
+                               <span class="date"> [[${#temporals.format(dto.regTime, 'MM')}]] </span> <span class="month"> [[${#temporals.format(dto.regTime, 'dd')}]] </span>
+                            </div>
+                        </div>
+                        <div class="single-blog-contents mt-3">
+                            <h4 class="single-blog-contents-title mt-3"><a class="text-dark" th:href="@{/jowhangboard/read(jbno = ${dto.jbno},
+                    page= ${result.page},
+                    type=${pageRequestDTO.type} ,
+                    keyword = ${pageRequestDTO.keyword})}">[[${dto.title}]]</a></h4>
+                        </div>
+                    </div>
+                </div>
+                </th:block>
+            </div>
+            <div class="row mt-5">
+                <div class="col">
+                    <div class="pagination-wrapper">
+                        <nav>
+                            <ul class="pagination pagination-dark justify-content-center">
+                                <!-- 'Previous' 버튼 수정 -->
+                                <li th:class="${result.prev} ? 'page-item' : 'page-item disabled'">
+                                    <a class="page-link"
+                                       th:href="@{/jowhangboard/list(page=${result.page - 1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
+                                        이전
+                                    </a>
+                                </li>
+
+                                <!-- 페이지네이션 시작 페이지 및 끝 페이지 계산 -->
+                                <th:block th:with="startPage=${result.page - 5}, endPage=${result.page + 5}">
+
+                                    <!-- 시작 페이지부터 끝 페이지까지 페이지 목록 생성 -->
+                                    <li th:each="page: ${#numbers.sequence(1, result.totalPage)}"
+                                        th:if="${page >= startPage and page <= endPage}"
+                                        th:class="${result.page == page} ? 'page-item active' : 'page-item'">
+                                        <a class="page-link"
+                                           th:href="@{/jowhangboard/list(page=${page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
+                                            [[${page}]]
+                                        </a>
+                                    </li>
+
+                                </th:block>
+
+                                <!-- 'Next' 버튼 수정 -->
+                                <li th:class="${result.next} ? 'page-item' : 'page-item disabled'">
+                                    <a class="page-link"
+                                       th:href="@{/jowhangboard/list(page=${result.page + 1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
+                                        다음
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Blog area end -->
+
+    <script th:inline="javascript">
+
+        let msg = [[${msg}]];
+
+        console.log(msg);
+
+        if (msg) {
+            $(".modal").modal();
+        }
+        var searchForm = $("#searchForm");
+
+        $('#search').click(function (e) {
+
+            searchForm.submit();
+
+        });
+
+        $('#clear').click(function (e) {
+
+            searchForm.empty().submit();
+
+        });
+
+
+    </script>
+
+</div>
+</html>

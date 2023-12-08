@@ -20,7 +20,7 @@ public class NoticeReply extends BaseEntity{
 
 
     @ManyToOne(fetch = FetchType.LAZY) //지연로딩 설정
-    @JoinColumn(name = "rbno")
+    @JoinColumn(name = "nbno")
     private NoticeBoard noticeBoard; //연관관계 지정
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -13,6 +13,7 @@ public interface ReservationDateService {
     public boolean modifyDateAvailable(Long rdate, ReservationDateDTO reservationDateDTO);
     public boolean modifySort(Long rdate, ReservationDateDTO reservationDateDTO);
     public boolean modifySorts(LocalDate startDate, LocalDate endDate, String sort, int extraMembers, int fishingMoney);
+    boolean isReservable(ReservationDate reservationDate);
 
     default ReservationDate DtoToEntity(ReservationDateDTO dto) {
         ReservationDate reservationDate = new ReservationDate();
@@ -35,6 +36,7 @@ public interface ReservationDateService {
         dto.setFishingSort(reservationDate.getFishingSort());
         dto.setExtrasMembers(reservationDate.getExtrasMembers());
         dto.setFishingMoney(reservationDate.getFishingMoney());
+        dto.setDateModify(reservationDate.isDateModify());
         return dto;
     }
 

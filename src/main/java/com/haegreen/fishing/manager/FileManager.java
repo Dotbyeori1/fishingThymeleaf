@@ -25,13 +25,12 @@ public class FileManager {
     
     //생성자에 경로를 입력 안할시 기본 경로를 사용해서 저장
     public FileManager(){
-        dir = System.getProperty("user.dir") + "\\haegreen";
+        dir = System.getProperty("user.dir") + File.separator + "haegreen" + File.separator;
         System.out.println(dir);
     }
 
     //파일 삭제 메서드
     public boolean remove(String filename){
-        Autofolder(dir);
         File file = new File(dir + filename);
         return file.delete();
     }
@@ -84,7 +83,7 @@ public class FileManager {
                 e.getStackTrace();
             }
         } else {
-            System.out.println("폴더가 이미 존재합니다..");
+            // System.out.println("폴더가 이미 존재합니다..");
         }
     }
 
@@ -100,11 +99,17 @@ public class FileManager {
         return extension != null; //파일 확장자가 없을때는 쓰레기 파일이 되므로 기본적으로 검출이 필요함
     }
 
-    //UUID 생성(파일이름이 겹치지 않게)
-    public String UUIDMaker(String filename){
-        String uuid = UUID.randomUUID().toString(); //UUID 생성
-        String realname = uuid + "_" +  filename; //서로 합침
-        return realname;
+    //UUID 생성
+    public String UUIDMaker(String filename) {
+        String uuid = UUID.randomUUID().toString(); // UUID 생성
+
+        // 확장자 추출
+        String extension = filename.substring(filename.lastIndexOf(".") + 1);
+
+        // UUID와 확장자 합치기
+        String uuidFileName = uuid + "." + extension;
+
+        return uuidFileName;
     }
 
     public String generateFileName(String origin) {

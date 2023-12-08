@@ -27,5 +27,7 @@ public class ReservationDateDTO {
 
     private Integer fishingMoney; // 금액
 
+    private boolean dateModify; // 날짜 수정 여부
+
     private List<ReservationDTO> reservations;
 }

@@ -6,7 +6,7 @@ import com.haegreen.fishing.dto.PageRequestDTO;
 import com.haegreen.fishing.dto.PageResultDTO;
 import com.haegreen.fishing.entitiy.Member;
 import com.haegreen.fishing.repository.MemberRepository;
-import com.haegreen.fishing.service.ImgService;
+import com.haegreen.fishing.service.NoticeBoardImgService;
 import com.haegreen.fishing.service.NoticeBoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -20,27 +20,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("adminboard")
+@RequestMapping("noticeboard")
 @Log4j2
 @RequiredArgsConstructor
 public class NoticeBoardController {
 
     private final NoticeBoardService noticeBoardService;
-    private final ImgService imgService;
+    private final NoticeBoardImgService noticeBoardImgService;
     private final MemberRepository memberRepository;
 
-    @GetMapping("/list")
+    @GetMapping("list")
     public String list(PageRequestDTO pageRequestDTO, Model model){
 
         PageResultDTO<NoticeBoardDTO, Object[]> pageResultDTO = noticeBoardService.getList(pageRequestDTO);
         if(pageResultDTO.getTotalPage()==0){ pageResultDTO.setTotalPage(1);} // 글이 하나도 없을 땐 0으로 인식하므로
 
+        pageRequestDTO.setType(pageRequestDTO.getTypeAsString());
+
+        model.addAttribute("pageRequestDTO", pageRequestDTO);
         model.addAttribute("result", pageResultDTO);
         return "noticeboard/list";
     }
 
     @GetMapping("register")
-    public String register( Model model){
+    public String register(){
         return "noticeboard/register";
     }
 
@@ -55,53 +58,63 @@ public class NoticeBoardController {
         Long nbno = noticeBoardService.register(dto); //새로 추가된 엔티티의 번호(dto)
 
         images.forEach(i -> {
-            imgService.noticeBoardRegister(i, nbno);
+            noticeBoardImgService.noticeBoardRegister(i, nbno);
         });
 
-        redirectAttributes.addFlashAttribute("msg", nbno);
+        redirectAttributes.addFlashAttribute("msg", "등록되었습니다.");
 
-        return "redirect:/adminboard/"+dto.getCategory();
+        return "redirect:/noticeboard/list";
     }
 
     @GetMapping({"read", "modify"})
-    public void read(@ModelAttribute("requestDTO") PageRequestDTO pageRequestDTO, Long bno, Model model){
-        log.info("bno : " + bno);
+    public void read(@ModelAttribute("requestDTO") PageRequestDTO pageRequestDTO, Long nbno, Model model){
 
-        NoticeBoardDTO adminBoardDTO = noticeBoardService.get(bno);
+        NoticeBoardDTO noticeBoardDTO = noticeBoardService.get(nbno);
 
-        log.info(adminBoardDTO);
+        List<ImgDTO> noticeBoardImgDTOs = noticeBoardService.getImgList(nbno);
 
-        List<ImgDTO> noticeBoardImgDTOs = noticeBoardService.getImgList(bno);
-
-        System.out.println("image : " + noticeBoardImgDTOs);
-
-        model.addAttribute("adminBoardImgs", noticeBoardImgDTOs);
-        model.addAttribute("dto", adminBoardDTO);
+        model.addAttribute("noticeBoardImgs", noticeBoardImgDTOs);
+        model.addAttribute("dto", noticeBoardDTO);
     }
 
     @PostMapping("remove")
-    public String remove(long nbno, RedirectAttributes redirectAttributes){
-        log.info("bno : " + nbno);
+    public String remove(Long nbno, RedirectAttributes redirectAttributes){
 
         noticeBoardService.removeWithReplies(nbno);
+        noticeBoardImgService.remove(nbno);
 
-        redirectAttributes.addFlashAttribute("msg", nbno);
+        redirectAttributes.addFlashAttribute("msg", "삭제되었습니다.");
 
-        return "redirect:/adminboard/list";
+        return "redirect:/noticeboard/list";
     }
 
     @PostMapping("modify")
-    public String modify(NoticeBoardDTO dto, @ModelAttribute("requestDTO") PageRequestDTO requestDTO, RedirectAttributes redirectAttributes){
-        log.info("post modify.....");
-        log.info("dto : " + dto);
+    public String modify(NoticeBoardDTO dto,
+                         @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+                         @RequestParam("images") List<MultipartFile> images,
+                         @RequestParam(value = "inos", required = false) List<Long> ninoList,
+                         @RequestParam(value = "deleteImages", required = false) List<Long> deleteImageIds,
+                         RedirectAttributes redirectAttributes){
+
+        if(ninoList == null || ninoList.isEmpty()){
+            images.forEach(i -> {
+                noticeBoardImgService.noticeBoardRegister(i, dto.getNbno());
+            });
+        }else {
+            noticeBoardImgService.updateImages(ninoList, images);
+        }
+
+        if(deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            noticeBoardImgService.deleteImages(deleteImageIds);
+        }
 
         noticeBoardService.modify(dto);
 
         redirectAttributes.addAttribute("page", requestDTO.getPage());
         redirectAttributes.addAttribute("type", requestDTO.getType());
         redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
-        redirectAttributes.addAttribute("bno", dto.getNbno());
-        return "redirect:/adminboard/read";
+        redirectAttributes.addAttribute("nbno", dto.getNbno());
+        return "redirect:/noticeboard/read";
     }
 
 }

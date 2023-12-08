@@ -5,7 +5,7 @@
 
 <div layout:fragment="content">
     <div class="container" style="margin: 50px auto;">
-        <h1>날짜별상태관리</h1>
+        <h1>날짜별예약정보</h1>
         <p>날짜별로 낚시의 종류와 인원 금액을 설정할 수 있습니다.</p>
 
         <form id="form1" style="margin-top: 50px;">
@@ -176,8 +176,8 @@
                         url: '/admin/modifysort',
                         method: 'POST',
                         data: {
-                            startDate: $("input[name='startDate']").val(),
-                            endDate: $("input[name='endDate']").val(),
+                            startDate: startDate,
+                            endDate: endDate,
                             fishingSort: fishingSort,
                             extrasMembers: extrasMembers,
                             fishingMoney: fishingMoney

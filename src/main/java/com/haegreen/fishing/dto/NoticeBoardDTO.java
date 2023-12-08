@@ -16,8 +16,9 @@ public class NoticeBoardDTO {
     private String content;
     private String writerEmail; //작성자 이메일
     private String writerName;
-    private LocalDateTime regDate;
-    private LocalDateTime modDate;
+    private LocalDateTime regTime;
+    private LocalDateTime modTime;
+    private String createdBy;
+    private String modifiedBy;
     private int replyCount; //해당 게시글 댓글 수
-    private String category; //카테고리
 }

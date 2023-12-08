@@ -1,13 +1,13 @@
 package com.haegreen.fishing.controller;
 
-import com.haegreen.fishing.dto.MemberFormDto;
-import com.haegreen.fishing.dto.ReservationDTO;
-import com.haegreen.fishing.dto.ReservationDateDTO;
-import com.haegreen.fishing.dto.ResponseDTO;
+import com.haegreen.fishing.dto.*;
 import com.haegreen.fishing.entitiy.Member;
+import com.haegreen.fishing.entitiy.Reservation;
+import com.haegreen.fishing.entitiy.ReservationDate;
 import com.haegreen.fishing.repository.ReservationRepository;
 import com.haegreen.fishing.security.CustomUserDetails;
 import com.haegreen.fishing.security.TokenProvider;
+import com.haegreen.fishing.service.JowhangBoardService;
 import com.haegreen.fishing.service.ReservationDateService;
 import com.haegreen.fishing.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
@@ -36,6 +37,7 @@ public class MainController {
 
     private final ReservationService reservationService;
     private final ReservationDateService reservationDateService;
+    private final JowhangBoardService jowhangBoardService;
     private final TokenProvider tokenProvider;
 
     @GetMapping("")
@@ -47,12 +49,30 @@ public class MainController {
     @GetMapping(value = "main")
     public String main(Model model) {
         LocalDate today = LocalDate.now();
-        LocalDate startDate = today;
         LocalDate endDate = today.plusDays(9);
-        List<ReservationDTO> reservationDTOS = reservationService.getAllReservations(startDate, endDate);
-        List<ReservationDateDTO> reservationDateDTOS = reservationDateService.getAllReservationDates(startDate, endDate);
+        List<ReservationDTO> reservationDTOS = reservationService.getAllReservations(today, endDate);
+        List<ReservationDateDTO> reservationDateDTOS = reservationDateService.getAllReservationDates(today, endDate);
+
+        // 갈치 시간 바꿈
+        LocalTime currentTime = LocalTime.now();
+        for(ReservationDateDTO reservationDateDTO : reservationDateDTOS){
+            String fishingSort = reservationDateDTO.getFishingSort();
+            if (fishingSort != null && ("갈치".contains(fishingSort)) && currentTime.isBefore(LocalTime.of(14, 0))) {
+                reservationDateDTO.setAvailable(true);
+            }
+            if(reservationDateDTO.isDateModify()){
+                reservationDateDTO.setAvailable(false);
+            }
+        }
         model.addAttribute("reservationDTOS", reservationDTOS);
         model.addAttribute("reservationDateDTOS", reservationDateDTOS);
+
+        int page = 1;
+        int pageSize = 10;
+        PageRequestDTO pageRequestDTO = new PageRequestDTO(page, pageSize);
+        PageResultDTO<JowhangBoardDTO, Object[]> jowhangBoard = jowhangBoardService.getList(pageRequestDTO);
+
+        model.addAttribute("jowhangBoard", jowhangBoard);
 
         return "main";
     }

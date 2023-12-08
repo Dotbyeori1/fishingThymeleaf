@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{fragments/layout1}">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.1/css/lightgallery.min.css"
+          integrity="sha512-F2E+YYE1gkt0T5TVajAslgDfTEUQKtlu4ralVq78ViNxhKXQLrgQLLie8u1tVdG2vWnB3ute4hcdbiBtvJQh0g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.1/lightgallery.min.js"
+            integrity="sha512-dSI4QnNeaXiNEjX2N8bkb16B7aMu/8SI5/rE6NIa3Hr/HnWUO+EAZpizN2JQJrXuvU7z0HTgpBVk/sfGd0oW+w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+
+        .badge-info, .badge-secondary {
+            color: #000;
+        }
+    </style>
+</th:block>
+<div layout:fragment="content">
+
+    <!-- Blog Details starts -->
+    <section class="blog-details-area pat-100 pab-100">
+        <div class="container">
+            <div class="row gy-5">
+                <div class="col-xl-12 col-lg-12">
+                    <div class="blog-details-wrapper">
+                        <div class="single-blog-details">
+                            <div class="single-blog-details-content pt-0">
+                                <h2 class="single-blog-details-content-title fw-500"> [[${dto.title}]] </h2>
+                                <div class="single-blog-details-content-tags mt-3">
+                                    <span class="single-blog-details-content-tags-item"
+                                          th:if="${dto.regTime} == null">
+                                            최근 업데이트 : [[${#temporals.format(dto.regTime, 'yyyy/MM/dd')}]]
+                                        </span>
+                                    <span class="single-blog-details-content-tags-item"
+                                          th:if="${dto.modTime} != null">
+                                            최근 업데이트 : [[${#temporals.format(dto.modTime, 'yyyy/MM/dd')}]]
+                                        </span>
+                                </div>
+                                <div th:each="img : ${jowhangBoardImgs}">
+                                    <br/>
+                                    <img th:src="'/haegreen/' + ${img.uuidfileName}" th:alt="${img.uuidfileName}"/>
+                                    <br/>
+                                </div>
+                                <p class="card-text" style="margin-top: 20px;" th:utext="${dto.content}"></p>
+                            </div>
+                        </div>
+                        <!-- Details Tag area starts -->
+                        <div class="details-tag-area color-two pat-25 pab-50">
+                            <div class="row align-items-center">
+                                <div class="col-lg-6 mt-4">
+                                    <div class="blog-details-share-content">
+                                        <h4 class="blog-details-share-content-title"> Share: </h4>
+                                        <ul class="blog-details-share-social list-style-none">
+                                            <li class="blog-details-share-social-list">
+                                                <a class="blog-details-share-social-list-icon"
+                                                   href="javascript:void(0)"> <i class="lab la-facebook-f"></i> </a>
+                                            </li>
+                                            <li class="blog-details-share-social-list">
+                                                <a class="blog-details-share-social-list-icon"
+                                                   href="javascript:void(0)"> <i class="lab la-twitter"></i> </a>
+                                            </li>
+                                            <li class="blog-details-share-social-list">
+                                                <a class="blog-details-share-social-list-icon"
+                                                   href="javascript:void(0)"> <i class="lab la-pinterest-p"></i>
+                                                </a>
+                                            </li>
+                                            <li class="blog-details-share-social-list">
+                                                <a class="blog-details-share-social-list-icon"
+                                                   href="javascript:void(0)"> <i class="lab la-youtube"></i> </a>
+                                            </li>
+                                            <li class="blog-details-share-social-list">
+                                                <a class="blog-details-share-social-list-icon"
+                                                   href="javascript:void(0)"> <i class="lab la-instagram"></i> </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mt-4">
+                                    <div class="blog-details-share-content right-align">
+                                        <form th:action="@{/jowhangboard/remove}" method="post">
+                                            <a th:href="@{/jowhangboard/list(jbno = ${dto.jbno}, page=${requestDTO.page} , type=${requestDTO.type}, keyword =${requestDTO.keyword})}">
+                                                <button type="button" class="btn btn-info">목록으로</button>
+                                            </a>
+
+                                            <a th:href="@{/jowhangboard/modify(jbno = ${dto.jbno}, page=${requestDTO.page}, type=${requestDTO.type}, keyword =${requestDTO.keyword})}">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                        sec:authorize="hasAnyAuthority('ROLE_ADMIN')">수정하기
+                                                </button>
+                                            </a>
+
+                                            <input type="hidden" th:value="${dto.jbno}" name="jbno">
+                                            <button type="submit" class="btn btn-danger removeBtn"
+                                                    sec:authorize="hasAnyAuthority('ROLE_ADMIN')">삭제하기
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Details Tag area end -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Blog Details area end -->
+
+</div>
+
+</html>
+
+
+

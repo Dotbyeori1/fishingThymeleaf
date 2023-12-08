@@ -67,7 +67,7 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public Page<Object[]> searchPageByWriter(String[] type, String keyword, Pageable pageable) {
+    public Page<Object[]> noticeBoardSearchList(String[] type, String keyword, Pageable pageable) {
         QNoticeBoard noticeBoard = QNoticeBoard.noticeBoard;
         QNoticeReply reply = QNoticeReply.noticeReply;
         QMember member = QMember.member;
@@ -107,6 +107,61 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
         });
 
         tuple.groupBy(noticeBoard);
+
+        // page 처리
+        tuple.offset(pageable.getOffset());
+        tuple.limit(pageable.getPageSize());
+
+        List<Tuple> result = tuple.fetch();
+        long count = tuple.fetchCount();
+
+        return new PageImpl<Object[]>(
+                result.stream().map(t -> t.toArray()).collect(Collectors.toList()),
+                pageable,
+                count);
+    }
+
+    @Override
+    public Page<Object[]> jowhangBoardSearchList(String[] type, String keyword, Pageable pageable) {
+        QJowhangBoard jowhangBoard = QJowhangBoard.jowhangBoard;
+        QJowhangReply reply = QJowhangReply.jowhangReply;
+        QMember member = QMember.member;
+
+        // 기존 쿼리문에서
+        JPQLQuery<Tuple> tuple = from(jowhangBoard)
+                .leftJoin(member).on(jowhangBoard.member.eq(member))
+                .leftJoin(reply).on(reply.jowhangBoard.eq(jowhangBoard))
+                .select(jowhangBoard, member, reply.count());
+
+        if (type != null) {
+            BooleanBuilder conditionBuilder = new BooleanBuilder();
+
+            for (String t : type) {
+                switch (t) {
+                    case "t":
+                        conditionBuilder.or(jowhangBoard.title.contains(keyword));
+                        break;
+                    case "w":
+                        conditionBuilder.or(member.nickName.contains(keyword));
+                        break;
+                    case "c":
+                        conditionBuilder.or(jowhangBoard.content.contains(keyword));
+                        break;
+                }
+            }
+            tuple.where(conditionBuilder);
+        }
+
+        // order by
+        Sort sort = pageable.getSort();
+        sort.stream().forEach(order -> {
+            Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+            String prop = order.getProperty();
+
+            tuple.orderBy(new OrderSpecifier(direction, ExpressionUtils.path(Object.class, jowhangBoard, prop)));
+        });
+
+        tuple.groupBy(jowhangBoard);
 
         // page 처리
         tuple.offset(pageable.getOffset());

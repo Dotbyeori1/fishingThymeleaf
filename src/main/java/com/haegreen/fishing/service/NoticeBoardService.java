@@ -1,10 +1,7 @@
 package com.haegreen.fishing.service;
 
 
-import com.haegreen.fishing.dto.ImgDTO;
-import com.haegreen.fishing.dto.NoticeBoardDTO;
-import com.haegreen.fishing.dto.PageRequestDTO;
-import com.haegreen.fishing.dto.PageResultDTO;
+import com.haegreen.fishing.dto.*;
 import com.haegreen.fishing.entitiy.Member;
 import com.haegreen.fishing.entitiy.NoticeBoard;
 import com.haegreen.fishing.repository.MemberRepository;
@@ -31,7 +28,6 @@ public interface NoticeBoardService {
                 .nbno(dto.getNbno())
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .category(dto.getCategory())
                 .member(member)
                 .build();
         //상단에서 생성한 Member객체 활용 Board객체 생성
@@ -39,18 +35,19 @@ public interface NoticeBoardService {
         return noticeBoard;
     }
 
-    default NoticeBoardDTO entityToDTO(NoticeBoard noticeBoard, Member member, Long adminReplyCount){
+    default NoticeBoardDTO entityToDTO(NoticeBoard noticeBoard, Member member, Long noticeReplyCount){
 
         NoticeBoardDTO noticeBoardDTO = NoticeBoardDTO.builder()
                 .nbno(noticeBoard.getNbno())
                 .title(noticeBoard.getTitle())
                 .content(noticeBoard.getContent())
-                .regDate(noticeBoard.getRegTime())
-                .modDate(noticeBoard.getModTime())
-                .category(noticeBoard.getCategory())
+                .regTime(noticeBoard.getRegTime())
+                .modTime(noticeBoard.getModTime())
+                .createdBy(noticeBoard.getCreatedBy())
+                .modifiedBy(noticeBoard.getModifiedBy())
                 .writerEmail(member.getEmail())
                 .writerName(member.getNickName())
-                .replyCount(adminReplyCount.intValue())
+                .replyCount(noticeReplyCount.intValue())
                 .build();
 
         return noticeBoardDTO;

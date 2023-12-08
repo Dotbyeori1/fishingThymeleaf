@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{fragments/layout1}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+
+        .badge-info, .badge-secondary {
+            color: #000;
+        }
+    </style>
+</th:block>
+<div layout:fragment="content">
+
+    <div class="dashboard-area section-bg-2 pat-100 pab-100">
+        <div class="container">
+            <div class="dashboard-contents-wrapper">
+                <div class="dashboard-right-contents mt-4 mt-lg-0">
+                    <div class="dashboard-reservation">
+                        <div class="single-reservation bg-white base-padding">
+                            <h4 class="card-title" th:text="${dto.title}" style="left: 0;"></h4>
+                            <div style="width: 100%; border-bottom: #000000 solid 1px; margin-top: 10px;"></div>
+                            <p class="card-text" style="margin-top: 20px;" th:utext="${dto.content}"></p>
+                            <div th:each="img : ${noticeBoardImgs}">
+                                <br/>
+                                <img th:src="'/haegreen/' + ${img.uuidfileName}" th:alt="${img.uuidfileName}"/>
+                                <br/>
+                            </div>
+                            <p style="margin-top: 20px; text-align: right;">작성일 : [[${#temporals.format(dto.regTime,
+                                'yyyy/MM/dd HH:mm:ss')}]]<br/>
+                                수정일 : [[${#temporals.format(dto.modTime, 'yyyy/MM/dd HH:mm:ss')}]]</p>
+                            <form th:action="@{/noticeboard/remove}" method="post">
+                                <a th:href="@{/noticeboard/list(nbno = ${dto.nbno}, page=${requestDTO.page} , type=${requestDTO.type}, keyword =${requestDTO.keyword})}">
+                                    <button type="button" class="btn btn-info">목록으로</button>
+                                </a>
+
+                                <a th:href="@{/noticeboard/modify(nbno = ${dto.nbno}, page=${requestDTO.page}, type=${requestDTO.type}, keyword =${requestDTO.keyword})}">
+                                    <button type="button" class="btn btn-outline-primary"
+                                            sec:authorize="hasAnyAuthority('ROLE_ADMIN')">수정하기
+                                    </button>
+                                </a>
+
+                                <input type="hidden" th:value="${dto.nbno}" name="nbno">
+                                <button type="submit" class="btn btn-danger removeBtn"
+                                        sec:authorize="hasAnyAuthority('ROLE_ADMIN')">삭제하기
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Dashboard area end -->
+
+    <script th:inline="javascript">
+        $(".removeBtn").click(function (event) {
+            if (!confirm("삭제하시겠습니까??")) {
+                event.preventDefault();
+            }
+        });
+    </script>
+
+</div>
+</html>
+
+
+

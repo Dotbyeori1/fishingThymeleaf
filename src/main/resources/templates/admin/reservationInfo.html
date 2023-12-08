@@ -153,7 +153,7 @@
                         data: {rvno: rvno},
                         success: function (response) {
                             alert(response.success);
-                            if (search == true) {
+                            if (search === true) {
                                 window.location.href = "/admin/searchlist";
                             } else {
                                 window.location.href = "/admin/reservationlist?regDate=" + regDate;

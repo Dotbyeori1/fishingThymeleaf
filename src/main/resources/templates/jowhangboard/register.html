@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout1}">
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .fieldError {
+            color: #bd2130;
+        }
+    </style>
+</th:block>
+<div layout:fragment="content">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tiny.cloud/1/3sfksqzu5vmtem6z88d0gi61nmmvqmyx39n9tokdq3jkwkkj/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tinymce/tinymce-jquery@2/dist/tinymce-jquery.min.js"></script>
+
+
+    <div class="container justify-content-center" style="margin: 50px auto">
+        <div class="card border-dark mb-3" style="max-width: 90%">
+            <div class="card-header">조황현황</div>
+
+            <div class="card-body">
+
+                <form th:action="@{/jowhangboard/register}" th:method="post" enctype="multipart/form-data">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>제목</th>
+                            <td>
+                                <input type="text" class="form-control" name="title" placeholder="제목을 입력하세요" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>내용</th>
+                            <td>
+                                <textarea id="tiny" name="content"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>업로드</th>
+                            <td>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">이미지</label>
+                                    <input class="form-control" type="file" name="images">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">이미지</label>
+                                    <input class="form-control" type="file" name="images">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">이미지</label>
+                                    <input class="form-control" type="file" name="images">
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" class="text-center">
+                                <button type="submit" class="btn btn-dark">등록</button>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        tinymce.init({
+            selector: '#tiny',
+            height: 500,
+            menubar: false,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | bold italic forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | removeformat | help'
+        });
+    </script>
+
+</div>
+</html>

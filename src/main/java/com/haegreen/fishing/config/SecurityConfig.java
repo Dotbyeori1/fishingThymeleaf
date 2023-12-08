@@ -59,12 +59,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(oAuth2AuthenticationSuccessHandler()); // 2단계를 순서대로 세팅 하는거
 
         http.authorizeRequests() // 경로 설정 // antMatchers : 일반적인 경로 설정 // mvc : mvc 패턴의 경로 설정 (ex : /board/{id})
-                .antMatchers("/admin","/admin/**").hasRole("ADMIN") // 관리자만 허용
+                .antMatchers("/admin","/admin/**", "/jowhangboard/modify", "jowhangboard/register",
+                        "noticeboard/register", "noticeboard/modify").hasRole("ADMIN") // 관리자만 허용
                 .antMatchers( "/","/page/**", "/review/**", "/**/**/**", "/reservation/**",
                         "/member/**", "/member/login/oauth2/code/**").permitAll() // 모두 허용
-                .mvcMatchers("/css/**", "/js/**", "/img/**", "/imgtest/**").permitAll()
+                .mvcMatchers("/css/**", "/js/**", "/img/**", "/haegreen/**").permitAll()
                 .mvcMatchers("/images/**", "/product/**").permitAll()
-                .mvcMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated();
 
         http.exceptionHandling() // 예외 발생시 어디로 리다이렉트 시키겠다

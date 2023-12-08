@@ -24,11 +24,18 @@ public class PageRequestDTO {
 
     private String region; // 지역
 
-    public String[] getType(){
+    public String[] getArrayType(){
         if(type == null || type.isEmpty()){
             return null;
         }
         return type.split("");
+    }
+
+    public String getTypeAsString(){
+        if(type == null || type.isEmpty()){
+            return null;
+        }
+        return String.join("", type.split(""));
     }
 
     public PageRequestDTO() {

@@ -9,7 +9,9 @@ import com.haegreen.fishing.entitiy.ReservationDate;
 import com.haegreen.fishing.repository.ReservationDateRepository;
 import com.haegreen.fishing.repository.ReservationRepository;
 import com.haegreen.fishing.security.CustomUserDetails;
+
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
+    private final ReservationDateService reservationDateService;
     private final ReservationDateRepository reservationDateRepository;
     private final ReservationDateRepository dateRepository;
 
@@ -59,15 +62,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Long register(ReservationDTO dto) {
         Reservation reservation = dtoToEntity(dto);
+
+        // 등록되지 않는 예약 날짜 체크
         Optional<ReservationDate> optional = dateRepository.findByRegDate(dto.getRegDate());
-        if (optional.isPresent()) {
-            ReservationDate reservationDate = optional.get();
-            if (!reservationDate.isAvailable())
-                throw new IllegalArgumentException("예약불가능 한 상태 입니다 : " + dto.getRegDate());
-            reservation.setReservationDate(reservationDate);
-        } else {
+        if (!optional.isPresent()) {
             throw new IllegalArgumentException("등록되지 않는 예약 날짜 입니다 : " + dto.getRegDate());
         }
+        ReservationDate reservationDate = optional.get();
+
+        // 예약 불가능한 상태 체크
+        if (!reservationDateService.isReservable(reservationDate)) {
+            throw new IllegalArgumentException("예약불가능 한 상태 입니다 : " + dto.getRegDate());
+        }
+
+        reservation.setReservationDate(reservationDate);
         reservationRepository.save(reservation);
         return reservation.getRvno();
     }
@@ -102,7 +110,7 @@ public class ReservationServiceImpl implements ReservationService {
         List<ReservationDTO> reservationDTOS = new ArrayList<>();
         List<Reservation> reservations = new ArrayList<>();
         if (authentication != null && authentication.isAuthenticated()) {
-            Member member = ((CustomUserDetails)authentication.getPrincipal()).getMember();
+            Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
             reservations = reservationRepository.findReservationsByEmail(member.getEmail());
         } else if (reservationDTO != null) {
             reservations = reservationRepository.findReservationsByRegNameAndTel(reservationDTO
@@ -191,7 +199,7 @@ public class ReservationServiceImpl implements ReservationService {
         PageRequest pageRequest = PageRequest.of(pageRequestDTO.getPage() - 1, pageRequestDTO.getSize(), sort);
         Page<Object[]> result = reservationRepository.searchPage(rvno, regName, depositName, tel, regDate, pageRequest);
         Function<Object[], ReservationDTO> fn = objectArr -> {
-            Reservation reservation = (Reservation)objectArr[0];
+            Reservation reservation = (Reservation) objectArr[0];
             Integer extraMembers = (Integer) objectArr[1];
 
             ReservationDTO dto = entityToDto(reservation);

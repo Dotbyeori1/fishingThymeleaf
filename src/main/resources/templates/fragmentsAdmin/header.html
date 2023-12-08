@@ -40,6 +40,17 @@
             sessionStorage.removeItem('accessPage_Time');
             window.location.href = "/member/logout";
         }
+
+        // 로그인 당시의 페이지 위치를 저장
+        function goToLoginPage() {
+            if (sessionStorage.getItem('prevPage')) {
+                sessionStorage.removeItem('prevPage');
+                sessionStorage.setItem('prevPage', window.location.href);
+            } else {
+                sessionStorage.setItem('prevPage', window.location.href);
+            }
+            window.location.href = "/member/login";
+        }
     </script>
 
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">

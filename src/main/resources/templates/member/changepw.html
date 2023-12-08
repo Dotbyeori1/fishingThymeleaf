@@ -70,22 +70,22 @@
                             <div class="custom--form dashboard-form">
                                 <form action="/member/changepw" id="changepw" method="post">
                                     <div class="dashboard-input mt-4">
-                                        <label class="label-title" th:for="password"> 현재 패밀번호 </label>
+                                        <label class="label-title" th:for="password"> 현재 비밀번호 </label>
                                         <input type="password" id="currentPassword" name="currentPassword" class="form--control" placeholder="현재 비밀번호" required>
                                         <div class="toggle-password"><span class="eye-icon"> </span></div>
                                         <p class="text-danger" th:text="${errorMessage}" th:if="${errorMessage}"></p>
                                     </div>
                                     <div class="dashboard-input mt-4">
-                                        <label class="label-title" th> 새 비밀번호 </label>
+                                        <label class="label-title"> 새 비밀번호 </label>
                                         <input type="password" id="password" name="password" class="form--control" placeholder="새 비밀번호" required>
                                         <div class="toggle-password"><span class="eye-icon"> </span></div>
                                     </div>
                                     <div class="dashboard-input mt-4">
-                                        <label class="label-title"> 비밀번호 확인 </label>
+                                        <label class="label-title"> 새 비밀번호 확인 </label>
                                         <input type="password" id="passwordConfirm" class="form--control" placeholder="새 비밀번호 확인" required>
                                         <div class="toggle-password"><span class="eye-icon"> </span></div>
-                                        <p id="passwordError" class="text-danger"></p>
                                     </div>
+                                    <p id="passwordError" class="text-danger"></p>
                                     <div class="btn-wrapper mt-4">
                                         <button class="submit-btn w-100 mt-4" type="submit">비밀번호 변경</button>
                                     </div>
@@ -102,7 +102,6 @@
     <script type="text/javascript">
         $(document).ready(function () {
             $('#changepw').on('submit', function (e) {
-                let currentPassword = $('#currentPassword').val();
                 let password = $('#password').val();
                 let passwordConfirm = $('#passwordConfirm').val();
 

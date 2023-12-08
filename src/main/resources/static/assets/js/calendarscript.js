@@ -190,8 +190,7 @@ const renderCalendar = () => {
             }
         });
 
-        let dateOfFullDate = new Date(fullDate);
-        let isAvailable2 = availabilityByDate[fullDate]&& dateOfFullDate >= today;
+        let isAvailable2 = availabilityByDate[fullDate]
         const stateBtnElements = document.querySelectorAll('.detailBtnClass');
         stateBtnElements.forEach(element => {
             if (isAvailable2) {
@@ -239,7 +238,7 @@ const renderCalendar = () => {
 
 
     function getTomorrowDate() {
-        today.setDate(today.getDate()+1);
+        today.setDate(today.getDate());
         return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
 
@@ -333,7 +332,7 @@ const renderCalendar = () => {
         let extras = extraMembersBydate[fullDate] || 0; // 예약 가능한 최대 인원
         let extraMembers = extras - confirmedMemberCount; // 확정된 인원을 빼서 남은 인원을 계산
         let isAvailable = (extraMembers > 0);
-        let btnClass = isAvailable2 ? 'btn-primary' : 'btn-danger';
+        let btnClass = isAvailable2 ? 'btn-success' : 'btn-danger';
         let btnClass2 = isAvailable ? 'btn-success' : 'btn-warning';
         let btnText = isAvailable2 ? '예약가능' : '예약불가';
         let btnText2 = isAvailable ? btnText : '예약완료';
@@ -400,8 +399,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     monthSelector.addEventListener("change", function () {
         const [selectedYear, selectedMonth] = this.value.split('-').map(Number);
+        const originalDate = date.getDate();  // 원래의 일자 저장
+        date.setDate(1);  // 일자를 일시적으로 1일로 설정
         date.setFullYear(selectedYear);
         date.setMonth(selectedMonth);
+
+        const lastDayOfMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate(); // 해당 월의 마지막 날짜 가져오기
+        if (originalDate > lastDayOfMonth) {
+            date.setDate(lastDayOfMonth);  // 만약 원래의 일자가 마지막 날짜보다 크다면, 마지막 날짜로 설정
+        } else {
+            date.setDate(originalDate);  // 원래의 일자로 다시 설정
+        }
         renderCalendar();
     });
 });

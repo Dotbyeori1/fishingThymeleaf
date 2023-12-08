@@ -6,11 +6,11 @@ import com.haegreen.fishing.dto.PageRequestDTO;
 import com.haegreen.fishing.dto.PageResultDTO;
 import com.haegreen.fishing.entitiy.Member;
 import com.haegreen.fishing.entitiy.NoticeBoard;
+import com.haegreen.fishing.entitiy.NoticeBoardImg;
 import com.haegreen.fishing.repository.MemberRepository;
 import com.haegreen.fishing.repository.NoticeBoardImgRepository;
 import com.haegreen.fishing.repository.NoticeBoardRepository;
 import com.haegreen.fishing.repository.NoticeReplyRepository;
-import groovy.util.logging.Log4j2;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +25,6 @@ import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
 public class NoticeBoardServiceImpl implements NoticeBoardService{
 
     private final NoticeBoardRepository repository;
@@ -63,13 +62,13 @@ public class NoticeBoardServiceImpl implements NoticeBoardService{
 
         //SearchBoardRepository에서 정의한 내용으로 세팅
         Page<Object[]> result; //Object결과를 Page객체에 담고
-        String[] type = pageRequestDTO.getType(); //검색 종류 담고
-        Sort sort = Sort.by(Sort.Direction.DESC, "bno"); //정렬방식 담음
+        String[] type = pageRequestDTO.getArrayType(); //검색 종류 담고
+        Sort sort = Sort.by(Sort.Direction.DESC, "nbno"); //정렬방식 담음
         // SearchBaordRepositoryImpl에서 정의한 Sort 정렬방식과 맞춰야 한다
         Pageable pageable = PageRequest.of(pageRequestDTO.getPage() - 1, pageRequestDTO.getSize(), sort);
 
         //조회는 모든 사용자가 다 볼 수 있게 설정(Role에 상관없이)
-        result = repository.searchPageByWriter(type, pageRequestDTO.getKeyword(), pageable);
+        result = repository.noticeBoardSearchList(type, pageRequestDTO.getKeyword(), pageable);
 
         return new PageResultDTO<>(result, fn);
     }
@@ -92,18 +91,18 @@ public class NoticeBoardServiceImpl implements NoticeBoardService{
     public void removeWithReplies(Long nbno) {
 
         noticeReplyRepository.deleteByBno(nbno); //댓글부터 삭제
-        
         repository.deleteById(nbno); //이후 본 글 삭제
     }
 
     @Override
-    public List<ImgDTO> getImgList(Long bno) {
+    public List<ImgDTO> getImgList(Long nbno) {
         List<ImgDTO> list = new ArrayList<>();
-        NoticeBoard entity = repository.findById(bno).get();
-        noticeBoardImgRepository.GetImgbybno(entity).forEach(i -> {
+        NoticeBoard entity = repository.findById(nbno).get();
+        noticeBoardImgRepository.GetImgbyNbno(entity).forEach(i -> {
             ImgDTO imgDTO = new ImgDTO();
             imgDTO.setIno(i.getNino());
-            imgDTO.setImgfile(i.getImgfile());
+            imgDTO.setUuidfileName(i.getUuidfileName());
+            imgDTO.setRealfileName(i.getRealfileName());
             imgDTO.setNoticeBoard(i.getNoticeBoard());
             list.add(imgDTO);
         });

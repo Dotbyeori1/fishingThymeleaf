@@ -85,18 +85,11 @@ public class AdminController {
         model.addAttribute("reservationDTO", reservationDTO);
 
         ReservationDate reservationDate = reservationDateRepository.findReservationDateByRegDate(reservationDTO.getRegDate());
-        // 갈치 시간 바꿈
-        String fishingSort = reservationDate.getFishingSort();
-        if (fishingSort != null && "갈치".equals(fishingSort.trim()) && LocalTime.now().isBefore(LocalTime.of(14, 0))) {
-            reservationDate.setAvailable(true);
-        }
-
+        boolean available = reservationDateService.isReservable(reservationDate);
         int extras = reservationDate.getExtrasMembers() - confirmMember;
-        if (extras <= 0 || !reservationDate.isAvailable()) {
-            model.addAttribute("message", "잘 못된 접근");
-        }
+
         model.addAttribute("fishingMoney", reservationDate.getFishingMoney());
-        model.addAttribute("available", Boolean.valueOf(reservationDate.isAvailable()));
+        model.addAttribute("available", available);
         model.addAttribute("extras", Integer.valueOf(extras));
         return "admin/reservationlist";
     }

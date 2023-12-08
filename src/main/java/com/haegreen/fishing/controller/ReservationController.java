@@ -73,11 +73,14 @@ public class ReservationController {
         List<ReservationDTO> reservationDTOS = reservationService.getAllReservations(startDate, endDate);
         List<ReservationDateDTO> reservationDateDTOS = reservationDateService.getAllReservationDates(startDate, endDate);
 
-        // 갈치 시간 바꿈
+        LocalTime currentTime = LocalTime.now();
         for(ReservationDateDTO reservationDateDTO : reservationDateDTOS){
             String fishingSort = reservationDateDTO.getFishingSort();
-            if (fishingSort != null && "갈치".equals(fishingSort.trim()) && LocalTime.now().isBefore(LocalTime.of(16, 0))) {
+            if (fishingSort != null && ("갈치".contains(fishingSort)) && currentTime.isBefore(LocalTime.of(14, 0))) {
                 reservationDateDTO.setAvailable(true);
+            }
+            if(reservationDateDTO.isDateModify()){
+                reservationDateDTO.setAvailable(false);
             }
         }
         model.addAttribute("reservationDTOS", reservationDTOS);
@@ -93,14 +96,8 @@ public class ReservationController {
         ReservationDate reservationDate = reservationDateRepository.findReservationDateByRegDate(regDate);
         Integer confirmedMembers = reservationRepository.findConfirmedReservationsOnDate(regDate);
 
-        // 갈치 시간 바꿈
-        String fishingSort = reservationDate.getFishingSort();
-        if (fishingSort != null && "갈치".equals(fishingSort.trim()) && LocalTime.now().isBefore(LocalTime.of(14, 0))) {
-            reservationDate.setAvailable(true);
-        }
-
         int extras = reservationDate.getExtrasMembers() - (confirmedMembers != null ? confirmedMembers : 0);
-        if (extras <= 0 || reservationDate.isAvailable() == false) {
+        if (extras <= 0 || !reservationDateService.isReservable(reservationDate)) {
             redirectAttributes.addFlashAttribute("message", "잘못된접근");
             return "redirect:/reservation/list";
         }
@@ -111,7 +108,7 @@ public class ReservationController {
         // 인증이 확인되면 로그인한 사용자의 정보를 가져온다.
         if (authentication != null && authentication.isAuthenticated()) {
             Member member = ((CustomUserDetails) authentication.getPrincipal()).getMember();
-            ;
+
             if (member.getRole() != Role.ADMIN) {
                 // 관리자가 아닌 경우, 사용자 정보를 memberFormDto에 채운다.
                 populateMemberFormDtoFromMember(memberFormDto, member);
