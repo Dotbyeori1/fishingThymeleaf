@@ -11,15 +11,14 @@ import com.haegreen.fishing.repository.ReservationRepository;
 import com.haegreen.fishing.security.CustomUserDetails;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
-import javax.annotation.PostConstruct;
-import javax.transaction.Transactional;
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -65,7 +64,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 등록되지 않는 예약 날짜 체크
         Optional<ReservationDate> optional = dateRepository.findByRegDate(dto.getRegDate());
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             throw new IllegalArgumentException("등록되지 않는 예약 날짜 입니다 : " + dto.getRegDate());
         }
         ReservationDate reservationDate = optional.get();
@@ -95,8 +94,7 @@ public class ReservationServiceImpl implements ReservationService {
                 changeName.append(regName);
             } else {
                 changeName.append(regName.charAt(0));
-                for (int i = 1; i < regName.length() - 1; i++)
-                    changeName.append('*');
+                changeName.append("*".repeat(regName.length() - 2));
                 changeName.append(regName.charAt(regName.length() - 1));
             }
             reservationDTO.setRegName(changeName.toString());
@@ -187,9 +185,9 @@ public class ReservationServiceImpl implements ReservationService {
     public Boolean remove(Long rvno) {
         try {
             reservationRepository.deleteById(rvno);
-            return Boolean.valueOf(true);
+            return Boolean.TRUE;
         } catch (EmptyResultDataAccessException e) {
-            return Boolean.valueOf(false);
+            return Boolean.FALSE;
         }
     }
 
@@ -206,6 +204,6 @@ public class ReservationServiceImpl implements ReservationService {
             dto.setExtraMembers(extraMembers);
             return dto;
         };
-        return new PageResultDTO(result, fn);
+        return new PageResultDTO<>(result, fn);
     }
 }

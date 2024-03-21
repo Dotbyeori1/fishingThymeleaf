@@ -84,8 +84,8 @@
                             <ul class="sub-menu">
                                 <li><a href="https://www.weather.go.kr/w/ocean/forecast/daily-forecast.do"
                                        target="_blank">기상청</a></li>
-                                <li><a href="https://www.khoa.go.kr/Main.do">국립해양조사원</a></li>
-                                <li><a href="https://www.windy.com/?33.443,127.095,8">미국기상청</a></li>
+                                <li><a href="https://www.khoa.go.kr/Main.do" target="_blank">국립해양조사원</a></li>
+                                <li><a href="https://www.windy.com/?33.443,127.095,8" target="_blank">미국기상청</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -118,7 +118,7 @@
                                         <a class="nav-link" href="/member/join">회원가입</a>
                                     </li>
                                     <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_ADMIN')">
-                                        <a class="nav-link" href="/admin/reservationlist">관리자</a>
+                                        <a class="nav-link" href="/admin/reservationList">관리자</a>
                                     </li>
                                     <li class="nav-item" sec:authorize="isAuthenticated()">
                                         <a class="nav-link" href="/member/memberinfo">회원정보</a>

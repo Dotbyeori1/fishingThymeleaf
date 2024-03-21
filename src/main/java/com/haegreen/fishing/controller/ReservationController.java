@@ -79,7 +79,7 @@ public class ReservationController {
             if (fishingSort != null && ("갈치".contains(fishingSort)) && currentTime.isBefore(LocalTime.of(14, 0))) {
                 reservationDateDTO.setAvailable(true);
             }
-            if(reservationDateDTO.isDateModify()){
+            if(!reservationDateDTO.isAvailable() || reservationDateDTO.isDateModify()){
                 reservationDateDTO.setAvailable(false);
             }
         }
@@ -191,8 +191,6 @@ public class ReservationController {
             // 조회 페이지로 다시 리다이렉트
             return "redirect:/reservation/check";
         }
-
-
     }
 
     @GetMapping("details")

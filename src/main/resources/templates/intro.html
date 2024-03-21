@@ -45,11 +45,42 @@
             }
         }
 
+        async function oauth2success() {
+            try {
+                const oauthValue = getQueryParam('oauth');
+                const response = await fetch(`/oauth?oauth=${oauthValue}`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+
+                localStorage.removeItem('token');
+                localStorage.setItem('token', data.token);
+                window.location.href = '/main';
+
+            } catch (error) {
+                console.error('An error occurred:', error);
+                window.location.href = '/main';
+            }
+        }
+
+        function getQueryParam(parameterName) {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            return urlParams.get(parameterName);
+        }
+
+        const oauthValue = getQueryParam('oauth');
+
         if (localStorage.getItem('token')) {
             authenticatedRequest();
+        } else if(oauthValue === 'true') {
+            oauth2success();
         } else {
             window.location.href = redirectTo;
         }
+
     </script>
 </head>
 <body>

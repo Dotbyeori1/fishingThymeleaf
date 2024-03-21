@@ -147,7 +147,7 @@
 
                     $.ajax({
                         type: "POST",
-                        url: "/admin/modifysort2",
+                        url: "/admin/modifySort",
                         data: $(this).serialize(), // 폼 데이터를 직렬화하여 전송합니다.
                         success: function (response) {
                             alert(response.success);
@@ -170,10 +170,16 @@
                     if (startDate > endDate) {
                         alert("시작날짜는 종료날짜보다 이전이어야 합니다.");
                         return;
+                    } else if(!fishingSort) {
+                        alert("낚시 종류(어종)을 입력해주세요.");
+                        return;
+                    } else if(!extrasMembers){
+                        alert("예약인원을 입력해주세요.");
+                        return;
                     }
 
                     $.ajax({
-                        url: '/admin/modifysort',
+                        url: '/admin/modifySort2',
                         method: 'POST',
                         data: {
                             startDate: startDate,

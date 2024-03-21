@@ -9,9 +9,6 @@
         .fieldError {
             color: #bd2130;
         }
-    </style>
-    <style>
-
         td {
             width: 80%;
         }
@@ -80,7 +77,7 @@
             <tr>
                 <th>입금금액</th>
                 <td>
-                    <form th:action="@{/admin/moneychange}" method="post" id="register">
+                    <form th:action="@{/admin/moneyChange}" method="post" id="register">
                         <input type="hidden" th:value="${reservationDTO.rvno}" name="rvno"/>
                         <span class="d-flex">
                                 <input class="form-control mr-2" type="number" th:value="${reservationDTO.money}"

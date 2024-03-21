@@ -2,12 +2,12 @@ package com.haegreen.fishing.security;
 
 import com.haegreen.fishing.entitiy.Member;
 import com.haegreen.fishing.repository.MemberRepository;
-import com.haegreen.fishing.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
 @Log4j2
@@ -25,8 +25,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final TokenProvider tokenProvider; // 토큰 인쇄기 장착!
+    @Value("${jwt.secret-key}")
+    private String secretKey;
 
+    private final TokenProvider tokenProvider; // 토큰 인쇄기 장착!
     private final MemberRepository memberRepository;
 
 
@@ -53,12 +55,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 요청에서 토큰 가져오기
             String token = parseBearerToken(request); // 해독기계로 해독한 토큰을 해독
             if (token != null && !token.equalsIgnoreCase("null")) { // 토큰이 진짜인지 감짜인지 판별
-                String userId = tokenProvider.validateAndGetUserId(token); // 토큰을 변환한 결과를 userid로 한다.
-                // customUserDetailsService을 통해 userId의 유효성을 확인 후, CustomUserDetails 객체에 저장한다
+                String userId = tokenProvider.validateAndGetUserId(token, secretKey); // 토큰을 변환한 결과를 userid로 한다.
                 Optional<Member> memberOpt = memberRepository.findById(userId);
                 if (memberOpt.isPresent()) {
                     CustomUserDetails customUserDetails = new CustomUserDetails(memberOpt.get());
-
                     // 결과가 맞으면 권한 부여 (// userDetail을 통해 id, password, role 부여)
                     AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             customUserDetails, customUserDetails.getPassword(), customUserDetails.getAuthorities());

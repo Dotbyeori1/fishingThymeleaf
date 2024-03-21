@@ -27,10 +27,8 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<Role> roles = Collections.singleton(member.getRole());
         List<GrantedAuthority> authorities = new ArrayList<>();
-        if (roles != null) {
-            for (Role role : roles) {
-                authorities.add(new SimpleGrantedAuthority(role.getRole()));
-            }
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getRole()));
         }
         return authorities; // 권한
     }

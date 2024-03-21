@@ -25,12 +25,12 @@
 </head>
 <body class="sb-nav-fixed">
 
-<div th:replace="fragmentsAdmin/header :: header"></div>
+<div th:replace="~{fragmentsAdmin/header :: header}"></div>
 <div id="layoutSidenav">
-    <div th:replace="fragmentsAdmin/sidebar :: sidebar"></div>
+    <div th:replace="~{fragmentsAdmin/sidebar :: sidebar}"></div>
     <div id="layoutSidenav_content">
     <div layout:fragment="content"></div>
-    <div th:replace="fragmentsAdmin/footer :: footer"></div>
+    <div th:replace="~{fragmentsAdmin/footer :: footer}"></div>
     </div>
 </div>
 </body>

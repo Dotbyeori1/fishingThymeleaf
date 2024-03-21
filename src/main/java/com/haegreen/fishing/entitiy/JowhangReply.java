@@ -2,14 +2,14 @@ package com.haegreen.fishing.entitiy;
 
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@ToString(exclude = "JowhangBoard") //FK지정 - 외래키로 설정될 엔티티 테이블 이름을 exclude 속성 지정해줌
+@ToString(exclude = "jowhangBoard") //FK지정 - 외래키로 설정될 엔티티 테이블 이름을 exclude 속성 지정해줌
 public class JowhangReply extends BaseEntity{
 
     @Id

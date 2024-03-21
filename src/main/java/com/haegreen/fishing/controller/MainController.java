@@ -2,9 +2,7 @@ package com.haegreen.fishing.controller;
 
 import com.haegreen.fishing.dto.*;
 import com.haegreen.fishing.entitiy.Member;
-import com.haegreen.fishing.entitiy.Reservation;
-import com.haegreen.fishing.entitiy.ReservationDate;
-import com.haegreen.fishing.repository.ReservationRepository;
+import com.haegreen.fishing.repository.MemberRepository;
 import com.haegreen.fishing.security.CustomUserDetails;
 import com.haegreen.fishing.security.TokenProvider;
 import com.haegreen.fishing.service.JowhangBoardService;
@@ -12,38 +10,60 @@ import com.haegreen.fishing.service.ReservationDateService;
 import com.haegreen.fishing.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @Log4j2
 @RequiredArgsConstructor
 public class MainController {
 
+    @Value("${jwt.secret-key}")
+    private String secretKey;
+
     private final ReservationService reservationService;
     private final ReservationDateService reservationDateService;
     private final JowhangBoardService jowhangBoardService;
     private final TokenProvider tokenProvider;
+    private final MemberRepository memberRepository;
 
     @GetMapping("")
-    public String intro(Model model) {
-
+    public String intro() {
         return "intro";
+    }
+
+    @PostMapping("/oauth")
+    public ResponseEntity<?> oauthSuccess (@RequestParam(value = "oauth", required = false) String oauth){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        MemberFormDto memberFormDto = new MemberFormDto();
+        if (principal instanceof CustomUserDetails && Objects.equals(oauth, "true")) {
+            Member member = ((CustomUserDetails) principal).getMember();
+            String token = tokenProvider.create((CustomUserDetails) principal, secretKey);
+            memberFormDto.setRole(member.getRole());
+            memberFormDto.setToken(token);
+            String refreshToken = tokenProvider.createRefreshToken((CustomUserDetails) principal, secretKey);
+            member.setRefreshToken(refreshToken);
+            memberRepository.save(member);
+        }
+        return ResponseEntity.ok(memberFormDto);
     }
 
     @GetMapping(value = "main")
@@ -59,8 +79,7 @@ public class MainController {
             String fishingSort = reservationDateDTO.getFishingSort();
             if (fishingSort != null && ("갈치".contains(fishingSort)) && currentTime.isBefore(LocalTime.of(14, 0))) {
                 reservationDateDTO.setAvailable(true);
-            }
-            if(reservationDateDTO.isDateModify()){
+            }else if(!reservationDateDTO.isAvailable() || reservationDateDTO.isDateModify()){
                 reservationDateDTO.setAvailable(false);
             }
         }
@@ -86,7 +105,7 @@ public class MainController {
         if (principal instanceof CustomUserDetails) {
             member = ((CustomUserDetails) principal).getMember();
 
-            if (tokenProvider.isTokenExpired(member.getRefreshToken())) {
+            if (tokenProvider.isTokenExpired(member.getRefreshToken(), secretKey)) {
                 ResponseDTO responseDTO = new ResponseDTO();
                 responseDTO.setError("재로그인이 필요합니다.");
                 SecurityContextLogoutHandler securityContextLogoutHandler = new SecurityContextLogoutHandler();
@@ -95,7 +114,7 @@ public class MainController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDTO);
             }
 
-            String token = tokenProvider.create((CustomUserDetails) principal);
+            String token = tokenProvider.create((CustomUserDetails) principal, secretKey);
             memberFormDto.setToken(token);
         } else {
             ResponseDTO responseDTO = new ResponseDTO();

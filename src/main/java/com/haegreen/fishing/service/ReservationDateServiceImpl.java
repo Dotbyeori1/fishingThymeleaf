@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.transaction.Transactional;
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -131,12 +131,11 @@ public class ReservationDateServiceImpl implements ReservationDateService {
         if (fishingSort != null && ("갈치".contains(fishingSort)) && LocalTime.now().isBefore(LocalTime.of(14, 0))) {
             reservationDate.setAvailable(true);
             return true;
-        }
-        if(reservationDate.isDateModify()){
+        }else if(!reservationDate.isAvailable() || reservationDate.isDateModify()) {
             reservationDate.setAvailable(false);
             return false;
         }
-        return reservationDate.isAvailable();
+        return true;
     }
 
     @Transactional

@@ -2,7 +2,7 @@ package com.haegreen.fishing.entitiy;
 
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity(name = "JowhangBoard")
 @Getter

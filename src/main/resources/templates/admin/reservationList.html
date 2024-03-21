@@ -12,7 +12,7 @@
         <p>예약번호를 누르시면 해당번호의 예약정보 확인·수정·삭제가 가능합니다.</p>
         <p>날짜별로 조회가 가능합니다.</p>
         <div>
-            <form id="form1" th:action="@{/admin/reservationlist}" method="get" style="margin-top: 25px;">
+            <form id="form1" th:action="@{/admin/reservationList}" method="get" style="margin-top: 25px;">
                 <div class="form-group row">
                     <span class="col-8 col-sm-9 col-md-5 col-lg-3">
                         <input type="date" class="form-control" id="regDate" name="regDate"
@@ -175,7 +175,7 @@
                     // 예를 들어, AJAX 호출을 사용해 서버에 변경 요청을 보낼 수 있습니다.
                     // AJAX 예시:
                     $.ajax({
-                        url: '/admin/reservationstate',
+                        url: '/admin/reservationState',
                         type: 'POST',
                         contentType: 'application/json',  // JSON 형식 명시
                         data: JSON.stringify({  // JavaScript 객체를 JSON 문자열로 변환

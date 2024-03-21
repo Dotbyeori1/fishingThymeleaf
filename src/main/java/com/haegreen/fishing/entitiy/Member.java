@@ -8,7 +8,7 @@ import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Getter
@@ -56,5 +56,4 @@ public class Member {
         member.setRole(Role.USER); // 회원가입은 기본 유저
         return member;
     }
-
 }

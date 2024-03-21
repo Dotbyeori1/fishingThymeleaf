@@ -1,91 +1,76 @@
 package com.haegreen.fishing.config;
 
-import com.haegreen.fishing.security.CustomAuthenticationEntryPoint;
-import com.haegreen.fishing.security.CustomOauth2UserService;
-import com.haegreen.fishing.security.JwtAuthenticationFilter;
-import com.haegreen.fishing.security.OAuth2AuthenticationSuccessHandler;
+import com.haegreen.fishing.security.*;
 import com.haegreen.fishing.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@RequiredArgsConstructor
+public class SecurityConfig{
 
-    // 스프링 시큐리티 로그인 핵심 설정
-    // 그러므로 각종 로그인 기능을 장착 해줘야함
-    @Autowired
-    CustomUserDetailsService customUserDetailsService;
+    // 로그인&시큐리티 관련
+    private final CustomUserDetailsService customUserDetailsService;
+    private final CustomOauth2UserService customOauth2UserService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Autowired
-    CustomOauth2UserService customOauth2UserService;
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-    @Autowired
-    JwtAuthenticationFilter jwtAuthenticationFilter;
+        http.csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
+                    .logoutSuccessUrl("/"));
 
-    @Autowired
-    CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+        http.oauth2Login(oauth2Login -> oauth2Login.redirectionEndpoint(redirectionEndpoint ->redirectionEndpoint.baseUri("/member/login/oauth2/code/**"))
+                .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint.userService(customOauth2UserService))
+                .successHandler(oAuth2AuthenticationSuccessHandler()));
 
+        http.exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint)); // 예외 발생시 어디로 리다이렉트 시키겠다
 
-    @Override
-    public void configure(HttpSecurity http) throws Exception {
-        http.formLogin() // 밑엔 참고하라고 주석 달아 둔거.
-//                .loginPage("/member/login")
-//                .defaultSuccessUrl("/")
-//                .usernameParameter("email")
-                .and()
-                .logout() // 로그아웃은 스프링 시큐리티에게 전담하게 하는게 속편함.
-                .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
-                .logoutSuccessUrl("/")
-                .and()
-                .oauth2Login().redirectionEndpoint()
-                .baseUri("/member/login/oauth2/code/**"); // 소셜 로그인 페이지 담당하는 설정
-
-        http.oauth2Login() // 소셜 로그인 설정
-                .userInfoEndpoint()
-                .userService(customOauth2UserService) // 로그인 정보 1단계
-                .and()
-                .successHandler(oAuth2AuthenticationSuccessHandler()); // 2단계를 순서대로 세팅 하는거
-
-        http.authorizeRequests() // 경로 설정 // antMatchers : 일반적인 경로 설정 // mvc : mvc 패턴의 경로 설정 (ex : /board/{id})
-                .antMatchers("/admin","/admin/**", "/jowhangboard/modify", "jowhangboard/register",
-                        "noticeboard/register", "noticeboard/modify").hasRole("ADMIN") // 관리자만 허용
-                .antMatchers( "/","/page/**", "/review/**", "/**/**/**", "/reservation/**",
-                        "/member/**", "/member/login/oauth2/code/**").permitAll() // 모두 허용
-                .mvcMatchers("/css/**", "/js/**", "/img/**", "/haegreen/**").permitAll()
-                .mvcMatchers("/images/**", "/product/**").permitAll()
-                .anyRequest().authenticated();
-
-        http.exceptionHandling() // 예외 발생시 어디로 리다이렉트 시키겠다
-                .authenticationEntryPoint(customAuthenticationEntryPoint);
+        http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)); //세션 유지 정책
 
         // 스프링 시큐리티 필터가 돌기전에 해야하는 것들
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // csrf 공격 막는 기능 끄기
-        http.csrf().disable();
-        
+        http.authorizeRequests((authorize)->authorize
+                    .requestMatchers( "/admin","/admin/**", "/jowhangboard/modify", "/jowhangboard/register",
+                            "/noticeboard/register", "/noticeboard/modify").hasRole("ADMIN") // 관리자만 허용
+                    .requestMatchers( "/", "/main", "/page/**", "/review/**", "/reservation/**",
+                            "/member/**", "/noticeboard/list", "/noticeboard/read", "/jowhangboard/list","/jowhangboard/read",
+                            "/member/login/oauth2/code/**").permitAll() // 모두 허용
+                    .requestMatchers("/css/**", "/js/**", "/img/**", "/haegreen/**").permitAll()
+                    .requestMatchers("/images/**", "/product/**").permitAll());
+
         // http로 접속하면 https로 강제 리다이렉트 하는 기능
-        http.requiresChannel()
-                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
-                .requiresSecure();
+        http.requiresChannel(requiresChannel -> requiresChannel.requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                        .requiresSecure());
+
+        return http.build();
     }
 
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
-    }
 
     // 비밀번호 암호화 세팅
     @Bean
@@ -94,14 +79,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean(); // 로그인 기능 외부로 쓰기위해서
+    public AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
+        return new OAuth2AuthenticationSuccessHandler(customUserDetailsService);
     }
 
     @Bean
-    public AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
-        return new OAuth2AuthenticationSuccessHandler();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() { //CORS 설정
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(Arrays.asList("X-Requested-With", "Content-Type", "Authorization", "X-XSRF-token"));
+        configuration.setAllowCredentials(false);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
 }

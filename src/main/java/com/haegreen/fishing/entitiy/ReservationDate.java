@@ -2,7 +2,7 @@ package com.haegreen.fishing.entitiy;
 
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

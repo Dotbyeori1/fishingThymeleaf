@@ -3,6 +3,7 @@ package com.haegreen.fishing.service;
 import com.haegreen.fishing.dto.MemberFormDto;
 import com.haegreen.fishing.entitiy.Member;
 import com.haegreen.fishing.repository.MemberRepository;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,20 +12,18 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 @Service
 @Log4j2
 @Transactional
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MemberService {
 
     private final MemberRepository memberRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     private JavaMailSender emailSender; //이메일 전송해주는 기능을 DI받음
 
     // 비밀번호 암호화
@@ -58,7 +57,6 @@ public class MemberService {
 
     public Member changePassword(MemberFormDto memberFormDto){
         Member member = memberRepository.findByEmail(memberFormDto.getEmail());
-        System.out.println(memberFormDto.getPassword());
         member.setPassword(passwordEncoder.encode(memberFormDto.getPassword()));
         memberRepository.save(member);
 
@@ -74,4 +72,4 @@ public class MemberService {
         emailSender.send(message); //이메일 전송 기능을 통해서 위에서 생성한 메일 객체를 전송
     }
 
-} //class
+}

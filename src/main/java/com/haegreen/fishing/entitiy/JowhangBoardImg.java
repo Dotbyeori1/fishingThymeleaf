@@ -4,7 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "JowhangBoardImg")
@@ -13,7 +13,7 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "JowhangBoard")
+@ToString(exclude = "jowhangBoard")
 public class JowhangBoardImg {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
